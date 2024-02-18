@@ -1,14 +1,8 @@
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Main {
 
@@ -87,7 +81,8 @@ public class Main {
         }
 
         File shipClassLocFile = new File(shipClassLocfilePath);
-        // True, writeToFile checks again, but we can skip generating the map if already exists
+
+        // writeToFile checks again, but we can skip generating the map if it already exists
         if ( ! shipClassLocFile.exists()) {
             LocEntryMap shipClasses = Converter.createShipClassNames(nameListFiles);
 

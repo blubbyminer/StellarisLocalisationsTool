@@ -27,19 +27,19 @@ public class Converter {
      */
 
     public static void createLocFile(File namesListFile, File locFile) throws FileNotFoundException {
-        FileInputStream readerStream = new FileInputStream(namesListFile);
+        ;
 
+        // Output for the loc file
         String output = "";
 
+        // content of the name list file
         String content = "";
 
         String empireName = namesListFile.getName().replace("SWP_", "").replace(".txt", "");
         String speciesPrefix = namesListFile.getName().replace("SWP_", "").substring(0, 3).toUpperCase();
 
-        try {
+        try (FileInputStream readerStream = new FileInputStream(namesListFile)){
             content = IOUtils.toString(readerStream);
-
-            readerStream.close();
         } catch (IOException e) {
             System.out.println("Exception: " + e.getMessage() + "; aborting!");
             throw new RuntimeException(e);
@@ -474,7 +474,11 @@ public class Converter {
     }
 
 
-
+    /**
+     * This method reads every name list file and generates the localisation entries for a singular ship class file
+     * @param nameListFiles all relevant name list files
+     * @return All localisation entries in a Map
+     */
     public static LocEntryMap createShipClassNames(ArrayList<File> nameListFiles) {
         Pattern empireShipClasses = Pattern.compile("ship_class_names = \\{(\\s+swp_.*= \\{\\s+.+})+");
         Pattern shipClassesEntry = Pattern.compile("swp_.[^=\\s]* = \\{\\s+.+\\}");
@@ -528,7 +532,9 @@ public class Converter {
     private static String generateCategory(String empireName, String category, LocEntryMap entries) {
         return generateCategoryCommentHeader(empireName, category)
                 .concat("\n")
-                .concat(generateCategoryBody(entries));
+                .concat(
+                        generateCategoryBody(entries)
+                );
     }
     
     private static String generateCategoryCommentHeader(String empireName, String category) {
@@ -539,6 +545,7 @@ public class Converter {
         } else {
             middle = StringConstants.category_header.replace("§§§", empireName).replace("$$$", category);
         }
+
         StringBuilder topAndBottom = new StringBuilder();
 
         int length = middle.length();
@@ -557,6 +564,16 @@ public class Converter {
         
         return body;
     }
+
+    /**
+     *
+     * @param matcher Finds all relevant groups from provided content
+     * @param overheadMatcher To remove eventual overhead (e.g. block keys) from content
+     * @param category Category that is worked on (e.g. generic ship names)
+     * @param locPrefix prefix of the localisations key
+     * @param allGroups are there entries strewn in for several groups (e.g. character names)
+     * @return Map with all localisation entries
+     */
     private static LocEntryMap generateCategoryEntries(Matcher matcher, Matcher overheadMatcher, String category, String locPrefix, boolean allGroups){
         LocEntryMap categoryEntryMap = new LocEntryMap(category);
 
@@ -637,7 +654,7 @@ public class Converter {
     }
 
 
-    // TODO: Need to make it BOM
+
     private static final byte[] BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
     public static void writeToFile(File file, String content)  {
         if (file.exists()) {
@@ -656,14 +673,6 @@ public class Converter {
     public static void writeToFile(File file, LocEntryMap entries)  {
         String content = "l_english:\n" + generateCategory("", "Ship Classes", entries);
 
-
-
-        try (FileOutputStream fos = new FileOutputStream(file)){
-            fos.write(BOM);
-            fos.write(content.getBytes(StandardCharsets.UTF_8));}
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        writeToFile(file, content);
     }
 }
