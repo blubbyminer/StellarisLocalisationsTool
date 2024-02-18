@@ -119,7 +119,7 @@ public class Converter {
         System.out.println(output);
 
         // Disarmed for the moment; TODO: Rearm
-        //writeToFile(locFile, output);
+        writeToFile(locFile, output);
     }
 
 
@@ -504,7 +504,10 @@ public class Converter {
                         // Both patterns need to work, otherwise entry is invalid
                         if ( shipClassKeyMatcher.find() && shipClassNameMatcher.find()) {
                             String key = shipClassKeyMatcher.group();
-                            String value = shipClassNameMatcher.group().replace("{ ", "").replace(" }", "");
+                            String value = shipClassNameMatcher.group()
+                                    .replace("{ ", "")
+                                    .replace(" }", "")
+                                    .replace("\"", "");
 
                             if ( ! allShipClasses.containsKey(key)) {
                                 allShipClasses.put(key, value);
@@ -512,7 +515,6 @@ public class Converter {
                         }
                     }
                 }
-
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -638,6 +640,10 @@ public class Converter {
     // TODO: Need to make it BOM
     private static final byte[] BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
     public static void writeToFile(File file, String content)  {
+        if (file.exists()) {
+            System.out.println("File already exists, aborting!");
+            return;
+        }
         try (FileOutputStream fos = new FileOutputStream(file)){
             fos.write(BOM);
             fos.write(content.getBytes(StandardCharsets.UTF_8));}
