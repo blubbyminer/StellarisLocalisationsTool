@@ -9,8 +9,23 @@ import java.util.TreeMap;
 public class LocEntryMap extends TreeMap<String, String> {
     final String category;
 
+    public String getRaw() {
+        return raw;
+    }
+
+    public void setRaw(String raw) {
+        this.raw = raw;
+    }
+
+    private String raw;
+
     public LocEntryMap (String category) {
         this.category = category;
+    }
+
+    public LocEntryMap (String category, String raw) {
+        this.category = category;
+        this.raw = raw;
     }
 
     /**

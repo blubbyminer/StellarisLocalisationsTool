@@ -58,7 +58,12 @@ public class Main {
 
             boolean existsAlready = false;
             for (File locFile : existingLocFiles) {
-                if (locFile.getName().contains(empireName)) {
+                String locEmpireString = locFile.getName()
+                        .replace("swfr_", "")
+                        .replace("_l_english.yml", "")
+                        .replace(localisationsPath, "")
+                        .toLowerCase();
+                if (locEmpireString.contains(empireName)) {
                     existsAlready = true;
                     break;
                 }
