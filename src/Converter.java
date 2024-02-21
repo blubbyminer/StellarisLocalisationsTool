@@ -546,19 +546,69 @@ public class Converter {
 
 
     private static LocEntryMap createArmyNames(String empirePrefix, String empireName, String content) throws IOException {
+        String locPrefix = " " + empirePrefix + "_ARMY_";
+
+        LocEntryMap map = new LocEntryMap("Armies");
+
         // This will return the fleet_names, too, so we have to sieve a bit
         Pattern outerPattern = Pattern.compile("(?:(?:.+ = )\\{\\s+sequential_name = (?:.+))|(?:.+\\s+random_names = \\{\\s+(?:.*)\\s+\\}\\s+sequential_name = (?:.+))");
-        Pattern singleArmyPattern = Pattern.compile("");
 
         Matcher outerMatcher = outerPattern.matcher(content);
         while (outerMatcher.find()) {
             String outer = outerMatcher.group();
             if (outer.contains("fleet_names")) continue;
 
+            //TODO: if else for random names entries
+
+            Pattern armyKeyPattern = Pattern.compile(".+?(?= = \\{)");
+            Matcher armyKeyMatcher = armyKeyPattern.matcher(outer);
+
+            String armyKey = "";
+
+            if (armyKeyMatcher.find()) {
+                armyKey = armyKeyMatcher.group();
+            }
+
+            Pattern valuePattern = Pattern.compile("sequential_name = \\\"(.+)(?=\\\")");
+            Matcher valueMatcher = valuePattern.matcher(outer);
+
+            String value = "";
+
+            if (valueMatcher.find()) {
+                value = valueMatcher.group();
+            }
+
+            String locValue = "";
+
+            if ( ! value.isBlank() && value.contains("%")) {
+                String sequentialOld = value.subSequence(
+                        value.indexOf("%") + 1,
+                        value.lastIndexOf("%")
+                ).toString();
+
+                String sequentialKey = SequentialKeys.valueOf(sequentialOld).label;
+                locValue = "\"".concat(
+                                value
+                                        .replace(sequentialOld, sequentialKey)
+                                        .replace("%", "$"))
+                        .concat("\"");
+            }
+
+            String locKey = "";
+
+            if ( ! armyKey.isBlank()) {
+                locKey = locPrefix.concat(armyKey.toLowerCase());
+            }
+
+
+            if ( ! locKey.isEmpty() && ! locValue.isEmpty()) {
+                map.put(locKey, locValue);
+            }
+
             // TODO: verarbeite die Einzeleinträge
         }
 
-        return null;
+        return map;
     }
 
     /**
