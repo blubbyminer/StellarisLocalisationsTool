@@ -102,6 +102,8 @@ public class Converter {
             allCategories.add(fleetNames);
             // TODO: add all other blocks to content
 
+            createArmyNames(speciesPrefix, empireName, content);
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -119,7 +121,7 @@ public class Converter {
         //System.out.println(output);
 
         // Disarmed for the moment; TODO: Rearm
-        writeToFile(locFile, output);
+        //writeToFile(locFile, output);
     }
 
 
@@ -542,6 +544,22 @@ public class Converter {
         return categoryEntries;
     }
 
+
+    private static LocEntryMap createArmyNames(String empirePrefix, String empireName, String content) throws IOException {
+        // This will return the fleet_names, too, so we have to sieve a bit
+        Pattern outerPattern = Pattern.compile("(?:(?:.+ = )\\{\\s+sequential_name = (?:.+))|(?:.+\\s+random_names = \\{\\s+(?:.*)\\s+\\}\\s+sequential_name = (?:.+))");
+        Pattern singleArmyPattern = Pattern.compile("");
+
+        Matcher outerMatcher = outerPattern.matcher(content);
+        while (outerMatcher.find()) {
+            String outer = outerMatcher.group();
+            if (outer.contains("fleet_names")) continue;
+
+            // TODO: verarbeite die Einzeleinträge
+        }
+
+        return null;
+    }
 
     /**
      * This method reads every name list file and generates the localisation entries for a singular ship class file
