@@ -70,7 +70,7 @@ public class Main {
             }
 
             if ( ! existsAlready) {
-                String filename = localisationsPath + "swfr_" + empireName + "_l_enlish.yml";
+                String filename = localisationsPath + "swfr_" + empireName + "_l_english.yml";
                 File toCreate = new File(filename);
                 locFilesToCreate.put(nameList, toCreate);
             }
@@ -91,7 +91,7 @@ public class Main {
         if ( ! shipClassLocFile.exists()) {
             LocEntryMap shipClasses = Converter.createShipClassNames(nameListFiles);
 
-            Converter.writeToFile(shipClassLocFile, shipClasses);
+            Converter.writeToBOMFile(shipClassLocFile, shipClasses);
         }
         /*
         TODO:

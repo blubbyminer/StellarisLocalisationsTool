@@ -5,14 +5,11 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("RegExpRedundantEscape")
 public class Converter {
-    // TODO: regex für jeden Eintrag in einer <namelist>.txt... Fuck paradox
-
     // Notizen
     /*
     - Eigene Loc-Datei für Schiffklassen, da packen wir alles rein, wird sonst richtig mist und duplizierung
@@ -46,7 +43,6 @@ public class Converter {
 
         ArrayList<LocEntryMap> allCategories = new ArrayList<>();
         try {
-            
             LocEntryMap genericShipNames = createGenericShipNames(empireName, content);
             allCategories.add(genericShipNames);
             
@@ -97,12 +93,15 @@ public class Converter {
             
             LocEntryMap secondNames = createSecondNames(empireName, content);
             allCategories.add(secondNames);
-            
+
+//            LocEntryMap fullNames = createFullNames(empireName, content);
+//            allCategories.add(fullNames);
+
             LocEntryMap fleetNames = createFleetNames(speciesPrefix, empireName, content);
             allCategories.add(fleetNames);
-            // TODO: add all other blocks to content
 
-            createArmyNames(speciesPrefix, empireName, content);
+            LocEntryMap armyNames = createArmyNames(speciesPrefix, empireName, content);
+            allCategories.add(armyNames);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -116,12 +115,16 @@ public class Converter {
             output = output.concat(
                     generateCategory(empireName, map.category, map)
             ).concat("\n\n");
+
+
         }
+
+        replaceKeys(allCategories, content, namesListFile);
 
         //System.out.println(output);
 
         // Disarmed for the moment; TODO: Rearm
-        //writeToFile(locFile, output);
+        writeToBOMFile(locFile, output);
     }
 
 
@@ -173,6 +176,7 @@ public class Converter {
         return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix,  false);
     }
 
+    //TODO split sponsored_colonizers off
     private static LocEntryMap createColonyShipNames(String empireName, String content) throws IOException {
         final String category = "Colony Ships";
         final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_COLONY_SHIP_";
@@ -358,8 +362,8 @@ public class Converter {
             throw new IOException("Empty content");
         }
 
-        Pattern topLevelNamesPattern = Pattern.compile("first_names_male = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("first_names_male = \\{\\s+").matcher(content);
+        Pattern topLevelNamesPattern = Pattern.compile("\\sfirst_names_male = \\{\\s+(.[^\\}]+)");
+        Matcher overheadMatcher = Pattern.compile("\\sfirst_names_male = \\{\\s+").matcher(content);
         Matcher matcher = topLevelNamesPattern.matcher(content);
 
         return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, true);
@@ -374,8 +378,8 @@ public class Converter {
             throw new IOException("Empty content");
         }
 
-        Pattern topLevelNamesPattern = Pattern.compile("first_names_female = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("first_names_female = \\{\\s+").matcher(content);
+        Pattern topLevelNamesPattern = Pattern.compile("\\sfirst_names_female = \\{\\s+(.[^\\}]+)");
+        Matcher overheadMatcher = Pattern.compile("\\sfirst_names_female = \\{\\s+").matcher(content);
         Matcher matcher = topLevelNamesPattern.matcher(content);
 
         return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, true);
@@ -390,12 +394,32 @@ public class Converter {
             throw new IOException("Empty content");
         }
 
-        Pattern topLevelNamesPattern = Pattern.compile("second_names = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("second_names = \\{\\s+").matcher(content);
+        Pattern topLevelNamesPattern = Pattern.compile("\\ssecond_names = \\{\\s+(.[^\\}]+)");
+        Matcher overheadMatcher = Pattern.compile("\\ssecond_names = \\{\\s+").matcher(content);
         Matcher matcher = topLevelNamesPattern.matcher(content);
 
         return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, true);
     }
+
+    //TODO: regnal names
+
+// TODO: something here is fucked up
+
+//    private static LocEntryMap createFullNames(String empireName, String content) throws IOException {
+//        final String category = "Full Names";
+//        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_FULL_";
+//
+//        if (content.isEmpty() || content.isBlank()) {
+//            System.out.println("Empty file, presuming error, aborting!");
+//            throw new IOException("Empty content");
+//        }
+//
+//        Pattern topLevelNamesPattern = Pattern.compile("full_names = \\{\\s+(.[^\\}]+)");
+//        Matcher overheadMatcher = Pattern.compile("full_names = \\{\\s+").matcher(content);
+//        Matcher matcher = topLevelNamesPattern.matcher(content);
+//
+//        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
+//    }
 
 
     private enum SequentialKeys {
@@ -449,7 +473,9 @@ public class Converter {
             String outerSequential = "";
             if (sequentialNamesMatcher.find()) {
                 outerSequential = sequentialNamesMatcher.group();
-                String innerSequential = outerSequential.replace("sequential_name = ", "").replace("\"", "");
+                String innerSequential = outerSequential
+                        .replace("sequential_name = ", "")
+                        .replace("\"", "");
 
                 String sequentialOld = innerSequential.subSequence(
                         innerSequential.indexOf("%")+1,
@@ -510,7 +536,8 @@ public class Converter {
                 String locValue = "\"".concat(
                         innerSequential
                                 .replace(sequentialOld, sequentialKey)
-                                .replace("%", "$"))
+                                .replace("%", "$")
+                                .replace("\"", ""))
                         .concat("\"");
 
                 categoryEntries.put(locKey, locValue);
@@ -551,14 +578,19 @@ public class Converter {
         LocEntryMap map = new LocEntryMap("Armies");
 
         // This will return the fleet_names, too, so we have to sieve a bit
-        Pattern outerPattern = Pattern.compile("(?:(?:.+ = )\\{\\s+sequential_name = (?:.+))|(?:.+\\s+random_names = \\{\\s+(?:.*)\\s+\\}\\s+sequential_name = (?:.+))");
+        Pattern outerPattern = Pattern.compile("(?:(?:.+ = )\\{\\s+sequential_name = (?:.+))\\s+\\}|(?:.+\\s+random_names = \\{\\s+(?:.*)\\s+\\}\\s+sequential_name = (?:.+))\\s+\\}");
 
         Matcher outerMatcher = outerPattern.matcher(content);
+
+        String raw = "";
+
         while (outerMatcher.find()) {
             String outer = outerMatcher.group();
             if (outer.contains("fleet_names")) continue;
 
-            //TODO: if else for random names entries
+            raw = raw
+                    .concat(outer)
+                    .concat("\n");
 
             Pattern armyKeyPattern = Pattern.compile(".+?(?= = \\{)");
             Matcher armyKeyMatcher = armyKeyPattern.matcher(outer);
@@ -567,49 +599,119 @@ public class Converter {
 
             if (armyKeyMatcher.find()) {
                 armyKey = armyKeyMatcher.group();
+                armyKey = armyKey.strip();
             }
 
-            Pattern valuePattern = Pattern.compile("sequential_name = \\\"(.+)(?=\\\")");
-            Matcher valueMatcher = valuePattern.matcher(outer);
+            if ( ! outer.contains("random_names")) {
+                Pattern valuePattern = Pattern.compile("sequential_name = \\\"(.+)(?=\\\")");
+                Matcher valueMatcher = valuePattern.matcher(outer);
 
-            String value = "";
+                String value = "";
 
-            if (valueMatcher.find()) {
-                value = valueMatcher.group();
+                if (valueMatcher.find()) {
+                    value = valueMatcher.group();
+                    value = value
+                            .replace("sequential_name = ", "")
+                            .replace("\"", "");
+                }
+
+                String locValue = "";
+
+                if (!value.isBlank() && value.contains("%")) {
+                    String sequentialOld = value.subSequence(
+                            value.indexOf("%") + 1,
+                            value.lastIndexOf("%")
+                    ).toString();
+
+                    String sequentialKey = SequentialKeys.valueOf(sequentialOld).label;
+                    locValue = "\"".concat(
+                                    value
+                                            .replace(sequentialOld, sequentialKey)
+                                            .replace("%", "$")
+                                            .replace("\"", ""))     // I want to control where those " go to
+                            .concat("\"");
+                }
+
+                String locKey = "";
+
+                if (!armyKey.isBlank()) {
+                    locKey = locPrefix.concat(armyKey.toLowerCase());
+                }
+
+                if (!locKey.isEmpty() && !locValue.isEmpty()) {
+                    map.put(locKey, locValue);
+                }
+            } else {
+                Pattern sequentialPattern = Pattern.compile("sequential_name = \\\"(.+)(?=\\\")");
+                Pattern randomPattern = Pattern.compile("random_names = \\{\\s+(.+)\\s+\\}");
+
+                Matcher sequentialMatcher = sequentialPattern.matcher(outer);
+                Matcher randomMatcher = randomPattern.matcher(outer);
+
+                String sequentialInner = "";
+                String randomInner = "";
+
+                if (sequentialMatcher.find()) {
+                    sequentialInner = sequentialMatcher.group();
+                }
+
+                if (randomMatcher.find()) {
+                    randomInner = randomMatcher.group();
+
+                    randomInner = randomInner
+                            .replace("random_names = {", "")
+                            .replace("}", "");
+                }
+
+                ArrayList<String> randomNames = new ArrayList<>();
+
+                if ( ! randomInner.isEmpty() && ! randomInner.isBlank()) {
+                    randomNames = extractNames(randomInner);
+
+                    for (String name : randomNames) {
+                        String cleanName = name.replace("\"", "");
+                        String key = locPrefix.concat(StringUtils.stripAccents(cleanName).replace(" ", "_").toLowerCase());
+
+                        map.put(key, cleanName);
+                    }
+                }
+
+                // TODO: where do those additional " come from for ORD entries
+                if (! sequentialInner.isEmpty() && ! sequentialInner.isBlank()) {
+                    String innerSequential = sequentialInner
+                            .replace("sequential_name = ", "")
+                            .replace("\"", "")
+                            .replace("{", "")
+                            .replace("}", "");
+
+                    String sequentialOld = innerSequential.subSequence(
+                            innerSequential.indexOf("%") + 1,
+                            innerSequential.lastIndexOf("%")
+                    ).toString();
+                    String sequentialKey = SequentialKeys.valueOf(sequentialOld).label;
+
+                    String locKey = locPrefix.concat(sequentialKey);
+                    String locValue = "\"".concat(
+                                    innerSequential
+                                            .replace(sequentialOld, sequentialKey)
+                                            .replace("%", "$"))
+                            .concat("\"");
+
+                    map.put(locKey, locValue);
+                }
+
             }
-
-            String locValue = "";
-
-            if ( ! value.isBlank() && value.contains("%")) {
-                String sequentialOld = value.subSequence(
-                        value.indexOf("%") + 1,
-                        value.lastIndexOf("%")
-                ).toString();
-
-                String sequentialKey = SequentialKeys.valueOf(sequentialOld).label;
-                locValue = "\"".concat(
-                                value
-                                        .replace(sequentialOld, sequentialKey)
-                                        .replace("%", "$"))
-                        .concat("\"");
-            }
-
-            String locKey = "";
-
-            if ( ! armyKey.isBlank()) {
-                locKey = locPrefix.concat(armyKey.toLowerCase());
-            }
-
-
-            if ( ! locKey.isEmpty() && ! locValue.isEmpty()) {
-                map.put(locKey, locValue);
-            }
-
-            // TODO: verarbeite die Einzeleinträge
         }
+
+        // TODO: Unterschied zwischen %O% und $ORD$ bedenken
+        map.setRaw(raw);
 
         return map;
     }
+
+
+
+
 
     /**
      * This method reads every name list file and generates the localisation entries for a singular ship class file
@@ -665,8 +767,11 @@ public class Converter {
     }
 
 
+
     // Utility methods
     private static String generateCategory(String empireName, String category, LocEntryMap entries) {
+        if (entries.isEmpty()) return "";
+
         return generateCategoryCommentHeader(empireName, category)
                 .concat("\n")
                 .concat(
@@ -794,9 +899,49 @@ public class Converter {
     }
 
 
+    private static void replaceKeys(ArrayList<LocEntryMap> categories, String content, File original) {
+        //TODO: Namen aus zwei Worten werden z.T. geteilt. Prüfen
+        String newContent = content;
+
+        for (LocEntryMap map : categories) {
+            String toReplace = map.getRaw();
+
+            if (toReplace == null || toReplace.isEmpty()) {
+                break;
+            }
+
+            String keyList = "";
+            int perLine = 0;
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+                keyList = keyList
+                        .concat(entry.getKey())
+                        .concat(" ");
+                if (perLine == 5) {
+                    keyList = keyList.concat("\n\t\t\t");
+                    perLine = 0;
+                }
+                perLine++;
+            }
+
+            newContent = newContent.replace(toReplace, keyList);
+        }
+
+        writeToNamelistFile(original, newContent);
+    }
+
+
+    private static void writeToNamelistFile (File nameListFile, String content) {
+        try (FileOutputStream fos = new FileOutputStream(nameListFile)){
+            fos.write(content.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+    }
+
 
     private static final byte[] BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
-    public static void writeToFile(File file, String content)  {
+    public static void writeToBOMFile(File file, String content)  {
         if (file.exists()) {
             System.out.println("File already exists, aborting!");
             return;
@@ -810,9 +955,10 @@ public class Converter {
 
     }
 
-    public static void writeToFile(File file, LocEntryMap entries)  {
+    public static void writeToBOMFile(File file, LocEntryMap entries)  {
         String content = "l_english:\n" + generateCategory("", "Ship Classes", entries);
 
-        writeToFile(file, content);
+        writeToBOMFile(file, content);
     }
+
 }
