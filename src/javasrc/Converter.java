@@ -1,7 +1,10 @@
+package javasrc;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
@@ -40,61 +43,242 @@ public class Converter {
             throw new RuntimeException(e);
         }
 
+        if (content .isEmpty() || content.isBlank()) {
+            throw new IllegalArgumentException("Content is empty, aborting!");
+        }
+
+        ArrayList<NameListCategory> categories = new ArrayList<>();
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Generic Ship Names",
+                        "SHIP",
+                        Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Bellator Class Ship Names",
+                        "SHIP",
+                        Pattern.compile("swp_bellator = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("swp_bellator = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Science Ship Names",
+                        "SCIENCE_SHIP",
+                        Pattern.compile("science = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("science = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Colony Ship Names",
+                        "COLONY_SHIP",
+                        Pattern.compile("\\bcolonizer = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("\\bcolonizer = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Sponsored Colony Ship Names",
+                        "SPONS_COL_SHIP",
+                        Pattern.compile("sponsored_colonizer = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("sponsored_colonizer = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Constructor Ship Names",
+                        "CONSTRUCTION_SHIP",
+                        Pattern.compile("constructor = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("constructor = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Ground Transport Names",
+                        "TRANSPORT",
+                        Pattern.compile("transport = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("transport = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "XQ1 Station Names",
+                        "XQ1_STATION",
+                        Pattern.compile("military_station_xq1 = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("military_station_xq1 = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "XQ2 Station Names",
+                        "XQ2_STATION",
+                        Pattern.compile("military_station_xq2 = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("military_station_xq2 = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Golan 1 Station Names",
+                        "GOLAN_1",
+                        Pattern.compile("military_station_golan1 = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("military_station_golan1 = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Golan 2 Station Names",
+                        "GOLAN_2",
+                        Pattern.compile("military_station_golan2 = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("military_station_golan2 = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Golan 3 Station Names",
+                        "GOLAN_3",
+                        Pattern.compile("military_station_golan3 = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("military_station_golan3 = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Battle Station Names",
+                        "BATTLE_STATION",
+                        Pattern.compile("military_station_fleetop = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("military_station_fleetop = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Small military Station Names",
+                        "XS_MIL_STATION",
+                        Pattern.compile("military_station_small = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("military_station_small = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Ion Cannon Names",
+                        "ION_CANNON",
+                        Pattern.compile("ion_cannon = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("ion_cannon = \\{\\s+"),
+                        false
+                )
+        );
+
+        // TODO: here be ship classes
+        // TODO: here be fleet names
+        // TODO: here be army names
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Male First Names",
+                        "FIRST_MALE",
+                        Pattern.compile("\\sfirst_names_male = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("\\sfirst_names_male = \\{\\s+"),
+                        true
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Female First Names",
+                        "FIRST_FEMALE",
+                        Pattern.compile("\\sfirst_names_female = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("\\sfirst_names_female = \\{\\s+"),
+                        true
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Last Names",
+                        "SECOND",
+                        Pattern.compile("\\ssecond_names = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("\\ssecond_names = \\{\\s+"),
+                        true
+                )
+        );
+
 
         ArrayList<LocEntryMap> allCategories = new ArrayList<>();
-        try {
-            LocEntryMap genericShipNames = createGenericShipNames(empireName, content);
-            allCategories.add(genericShipNames);
-            
-            LocEntryMap bellatorNames = createBellatorShipNames(empireName, content);
-            allCategories.add(bellatorNames);
-            
-            LocEntryMap scienceShipNames = createScienceShipNames(empireName, content);
-            allCategories.add(scienceShipNames);
-            
-            LocEntryMap colonyShipNames = createColonyShipNames(empireName, content);
-            allCategories.add(colonyShipNames);
-            
-            LocEntryMap constructorShipNames = createConstructorShipNames(empireName, content);
-            allCategories.add(constructorShipNames);
-            
-            LocEntryMap transportShipNames = createTransportShipNames(empireName, content);
-            allCategories.add(transportShipNames);
-            
-            LocEntryMap xq1StationNames = createXQ1Names(empireName, content);
-            allCategories.add(xq1StationNames);
-            
-            LocEntryMap xq2StationNames = createXQ2Names(empireName, content);
-            allCategories.add(xq2StationNames);
-            
-            LocEntryMap golan1StationNames = createGolan1Names(empireName, content);
-            allCategories.add(golan1StationNames);
-            
-            LocEntryMap golan2StationNames = createGolan2Names(empireName, content);
-            allCategories.add(golan2StationNames);
-            
-            LocEntryMap golan3StationNames = createGolan3Names(empireName, content);
-            allCategories.add(golan3StationNames);
-            
-            LocEntryMap battleStationNames = createBattleStationNames(empireName, content);
-            allCategories.add(battleStationNames);
-            
-            LocEntryMap smallMilStationnames = createSmallMilitaryStationNames(empireName, content);
-            allCategories.add(smallMilStationnames);
-            
-            LocEntryMap ionCannonNames = createIonCannonNames(empireName, content);
-            allCategories.add(ionCannonNames);
-            
-            LocEntryMap maleFirstNames = createMaleFirstNames(empireName, content);
-            allCategories.add(maleFirstNames);
-            
-            LocEntryMap femaleFirstNames = createFemaleFirstNames(empireName, content);
-            allCategories.add(femaleFirstNames);
-            
-            LocEntryMap secondNames = createSecondNames(empireName, content);
-            allCategories.add(secondNames);
 
-//            LocEntryMap fullNames = createFullNames(empireName, content);
+        for (NameListCategory category : categories) {
+            allCategories.add(generateCategoryEntries(category, content));
+        }
+
+
+        try {
+//            java.LocEntryMap fullNames = createFullNames(empireName, content);
 //            allCategories.add(fullNames);
 
             LocEntryMap fleetNames = createFleetNames(speciesPrefix, empireName, content);
@@ -121,291 +305,17 @@ public class Converter {
 
         replaceKeys(allCategories, content, namesListFile);
 
-        //System.out.println(output);
+        System.out.println(output);
 
         // Disarmed for the moment; TODO: Rearm
         writeToBOMFile(locFile, output);
-    }
-
-
-    private static LocEntryMap createGenericShipNames(String empireName, String content) throws IOException {
-        final String category = "Generic Ships";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_SHIP_";
-        
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createBellatorShipNames(String empireName, String content) throws IOException {
-        final String category = "Bellator Class Ships";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_SHIP_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("swp_bellator = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("swp_bellator = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix,  false);
-    }
-
-    private static LocEntryMap createScienceShipNames(String empireName, String content) throws IOException {
-        final String category = "Science Ships";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_SCIENCE_SHIP_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("science = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("science = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix,  false);
-    }
-
-    //TODO split sponsored_colonizers off
-    private static LocEntryMap createColonyShipNames(String empireName, String content) throws IOException {
-        final String category = "Colony Ships";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_COLONY_SHIP_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("colonizer = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("colonizer = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix,  false);
-    }
-
-    private static LocEntryMap createConstructorShipNames(String empireName, String content) throws IOException {
-        final String category = "Constructor Ships";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_CONSTR_SHIP_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("constructor = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("constructor = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createTransportShipNames(String empireName, String content) throws IOException {
-        final String category = "Transport Ships";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_GROUND_SHIP_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("transport = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("transport = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createXQ1Names(String empireName, String content) throws IOException {
-        final String category = "Military Station XQ1";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_XQ1_STATION_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("military_station_xq1 = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("military_station_xq1 = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createXQ2Names(String empireName, String content) throws IOException {
-        final String category = "Military Station XQ2";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_XQ2_STATION_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("military_station_xq2 = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("military_station_xq2 = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createGolan1Names(String empireName, String content) throws IOException {
-        final String category = "Golan 1 Station";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_GOLAN1_STATION_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("military_station_golan1 = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("military_station_golan1 = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createGolan2Names(String empireName, String content) throws IOException {
-        final String category = "Golan 2 Station";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_GOLAN2_STATION_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("military_station_golan2 = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("military_station_golan2 = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createGolan3Names(String empireName, String content) throws IOException {
-        final String category = "Golan 3 Station";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_GOLAN3_STATION_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("military_station_golan3 = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("military_station_golan3 = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createBattleStationNames(String empireName, String content) throws IOException {
-        final String category = "Battle Station";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_BATTLE_STATION_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("military_station_fleetop = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("military_station_fleetop = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createSmallMilitaryStationNames(String empireName, String content) throws IOException {
-        final String category = "small military Station";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_XS_MIL_STATION_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("military_station_small = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("military_station_small = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createIonCannonNames(String empireName, String content) throws IOException {
-        final String category = "Ion Cannon";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_ION_CANNON_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("ion_cannon = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("ion_cannon = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
-    }
-
-    private static LocEntryMap createMaleFirstNames(String empireName, String content) throws IOException {
-        final String category = "Male First Names";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_FIRST_MALE_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("\\sfirst_names_male = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("\\sfirst_names_male = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, true);
-    }
-
-    private static LocEntryMap createFemaleFirstNames(String empireName, String content) throws IOException {
-        final String category = "Female First Names";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_FIRST_FEMALE_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("\\sfirst_names_female = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("\\sfirst_names_female = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, true);
-    }
-
-    private static LocEntryMap createSecondNames(String empireName, String content) throws IOException {
-        final String category = "Second Names";
-        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_SECOND_";
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        Pattern topLevelNamesPattern = Pattern.compile("\\ssecond_names = \\{\\s+(.[^\\}]+)");
-        Matcher overheadMatcher = Pattern.compile("\\ssecond_names = \\{\\s+").matcher(content);
-        Matcher matcher = topLevelNamesPattern.matcher(content);
-
-        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, true);
     }
 
     //TODO: regnal names
 
 // TODO: something here is fucked up
 
-//    private static LocEntryMap createFullNames(String empireName, String content) throws IOException {
+//    private static java.LocEntryMap createFullNames(String empireName, String content) throws IOException {
 //        final String category = "Full Names";
 //        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_FULL_";
 //
@@ -447,7 +357,7 @@ public class Converter {
 
         LocEntryMap categoryEntries = new LocEntryMap(category, null);
 
-        // Cover all cases
+        // Cover all cases, only one can come true
         Pattern sequentialRandomPattern = Pattern.compile("fleet_names = \\{\\s+random_names = \\{\\s+(.*)\\s+\\}\\s+sequential_name = (.+)");
         Pattern onlySequentialPattern = Pattern.compile("fleet_names = \\{\\s+sequential_name = (.+)");
         Pattern onlyRandomPattern = Pattern.compile("fleet_names = \\{\\s+random_names = \\{\\s+(.*)\\s+\\}");
@@ -466,6 +376,7 @@ public class Converter {
 
         while (sequentialRandomMatcher.find()) {
             String result = sequentialRandomMatcher.group();
+            System.out.println("raw string for fleet names: " + result);
 
             sequentialNamesMatcher = sequentialNamesPattern.matcher(result);
             randomNamesMatcher = randomNamesPattern.matcher(result);
@@ -476,6 +387,8 @@ public class Converter {
                 String innerSequential = outerSequential
                         .replace("sequential_name = ", "")
                         .replace("\"", "");
+
+                categoryEntries.setPrimaryRaw(innerSequential);
 
                 String sequentialOld = innerSequential.subSequence(
                         innerSequential.indexOf("%")+1,
@@ -499,6 +412,8 @@ public class Converter {
                         .replace("{", "")
                         .replace("}", "");
 
+                categoryEntries.setSecondaryRaw(innerRandom);
+
                 ArrayList<String> randomNames = extractNames(innerRandom);
 
                 for (String name : randomNames) {
@@ -512,7 +427,6 @@ public class Converter {
             isProcessed = true;
         }
         while (onlySequentialMatcher.find() && ! isProcessed) {
-
             String result = onlySequentialMatcher.group();
 
             sequentialNamesMatcher = sequentialNamesPattern.matcher(result);
@@ -525,6 +439,8 @@ public class Converter {
                         .replace("\"", "")
                         .replace("{", "")
                         .replace("}", "");
+
+                categoryEntries.setPrimaryRaw(innerSequential);
 
                 String sequentialOld = innerSequential.subSequence(
                         innerSequential.indexOf("%") + 1,
@@ -556,6 +472,8 @@ public class Converter {
                         .replace("\"", "")
                         .replace("{", "")
                         .replace("}", "");
+
+                categoryEntries.setPrimaryRaw(innerRandom);
 
                 ArrayList<String> randomNames = extractNames(innerRandom);
 
@@ -704,7 +622,7 @@ public class Converter {
         }
 
         // TODO: Unterschied zwischen %O% und $ORD$ bedenken
-        map.setRaw(raw);
+        map.setPrimaryRaw(raw);
 
         return map;
     }
@@ -769,6 +687,10 @@ public class Converter {
 
 
     // Utility methods
+    public static String generatePrefix(String empireName, String categoryKey, int lengthEmpireKey) {
+        return " " + (empireName.substring(0, lengthEmpireKey) + "_" + categoryKey + "_").toUpperCase();
+    }
+
     private static String generateCategory(String empireName, String category, LocEntryMap entries) {
         if (entries.isEmpty()) return "";
 
@@ -779,7 +701,7 @@ public class Converter {
                 );
     }
     
-    private static String generateCategoryCommentHeader(String empireName, String category) {
+    public static String generateCategoryCommentHeader(String empireName, String category) {
         String middle = "";
 
         if (empireName.isBlank() || empireName.isEmpty()) {
@@ -801,19 +723,30 @@ public class Converter {
         String body = "";
         
         for (Map.Entry<String, String> entry : map.entrySet()){
-            body = body.concat(LocEntryMap.GetLocString(entry)).concat("\n");
+            body = body.concat(LocEntryMap.getLocString(entry)).concat("\n");
         }
         
         return body;
     }
 
+
+    private static LocEntryMap generateCategoryEntries(NameListCategory category, String content) {
+        if (category instanceof SimpleNameListCategory) {
+
+            return generateCategoryEntries(
+                    ((SimpleNameListCategory) category).getRawPattern().matcher(content),
+                    ((SimpleNameListCategory) category).getOverhead().matcher(content),
+                    category.categoryName,
+                    category.buildLocPrefix(),
+                    ((SimpleNameListCategory) category).isMultipleEntriespossible());
+        } else return null;
+    }
     /**
      *
      * @param matcher Finds all relevant groups from provided content
      * @param overheadMatcher To remove eventual overhead (e.g. block keys) from content
      * @param category Category that is worked on (e.g. generic ship names)
      * @param locPrefix prefix of the localisations key
-     * @param allGroups are there entries strewn in for several groups (e.g. character names)
      * @return Map with all localisation entries
      */
     private static LocEntryMap generateCategoryEntries(Matcher matcher, Matcher overheadMatcher, String category, String locPrefix, boolean allGroups){
@@ -829,10 +762,9 @@ public class Converter {
                     list = list.replace(overhead, "");
                 }
 
-                categoryEntryMap.setRaw(list);
+                categoryEntryMap.setPrimaryRaw(list);
 
                 ArrayList<String> namesList = extractNames(list);
-
 
                 for (String name : namesList) {
                     String key = StringUtils.stripAccents(
@@ -856,7 +788,7 @@ public class Converter {
                     list = list.replace(overhead, "");
                 }
 
-                categoryEntryMap.setRaw(list);
+                categoryEntryMap.setPrimaryRaw(list);
 
                 ArrayList<String> namesList = extractNames(list);
 
@@ -900,11 +832,10 @@ public class Converter {
 
 
     private static void replaceKeys(ArrayList<LocEntryMap> categories, String content, File original) {
-        //TODO: Namen aus zwei Worten werden z.T. geteilt. Prüfen
         String newContent = content;
 
         for (LocEntryMap map : categories) {
-            String toReplace = map.getRaw();
+            String toReplace = map.getPrimaryRaw();
 
             if (toReplace == null || toReplace.isEmpty()) {
                 break;
@@ -924,6 +855,25 @@ public class Converter {
             }
 
             newContent = newContent.replace(toReplace, keyList);
+
+            if (map.getSecondaryRaw() != null) {
+                if (!map.getSecondaryRaw().isEmpty() || !map.getSecondaryRaw().isBlank()) {
+                    String secondaryKeys = "";
+                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                        // Check if the entry is in secondaryRaw, mind the differing SequentialKey flavour
+
+
+                        for (SequentialKeys key : SequentialKeys.values()) {
+                            if (entry.getValue().contains(key.label)) {
+                                secondaryKeys = entry.getValue()
+                                        .replace(key.label, key.name())
+                                        .replace("$", "%");
+                            }
+                        }
+                    }
+                    newContent = newContent.replace(map.getSecondaryRaw(), secondaryKeys);
+                }
+            }
         }
 
         writeToNamelistFile(original, newContent);
