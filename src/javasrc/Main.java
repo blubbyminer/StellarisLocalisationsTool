@@ -78,6 +78,15 @@ public class Main {
             }
         }
 
+        File shipClassLocFile = new File(shipClassLocfilePath);
+
+        // writeToFile checks again, but we can skip generating the map if it already exists
+        if ( ! shipClassLocFile.exists()) {
+            LocEntryMap shipClasses = Converter.createShipClassNames(nameListFiles);
+
+            Converter.writeToBOMFile(shipClassLocFile, shipClasses);
+        }
+
         // create missing locfiles
         for (Map.Entry<File, File> entry : locFilesToCreate.entrySet()) {
             try {
@@ -87,14 +96,6 @@ public class Main {
             }
         }
 
-        File shipClassLocFile = new File(shipClassLocfilePath);
-
-        // writeToFile checks again, but we can skip generating the map if it already exists
-        if ( ! shipClassLocFile.exists()) {
-            LocEntryMap shipClasses = Converter.createShipClassNames(nameListFiles);
-
-            Converter.writeToBOMFile(shipClassLocFile, shipClasses);
-        }
         /*
         TODO:
             - Rückschrieb der Keys anstoßen

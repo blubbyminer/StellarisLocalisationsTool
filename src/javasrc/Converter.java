@@ -2,11 +2,13 @@ package javasrc;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
+import javax.print.DocFlavor;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,6 +59,18 @@ public class Converter {
                         "SHIP",
                         Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+(.[^\\}]+)"),
                         Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+"),
+                        false
+                )
+        );
+
+        categories.add(
+                new SimpleNameListCategory(
+                        empireName,
+                        speciesPrefix,
+                        "Subjugator Class Ship Names",
+                        "SHIP",
+                        Pattern.compile("swp_subjugator = \\{\\s+(.[^\\}]+)"),
+                        Pattern.compile("swp_subjugator = \\{\\s+"),
                         false
                 )
         );
@@ -313,8 +327,6 @@ public class Converter {
 
     //TODO: regnal names
 
-// TODO: something here is fucked up
-
 //    private static java.LocEntryMap createFullNames(String empireName, String content) throws IOException {
 //        final String category = "Full Names";
 //        final String locPrefix = " " + empireName.substring(0, 3).toUpperCase() + "_FULL_";
@@ -366,124 +378,63 @@ public class Converter {
         Matcher onlySequentialMatcher = onlySequentialPattern.matcher(content);
         Matcher onlyRandomMatcher = onlyRandomPattern.matcher(content);
 
-        Pattern sequentialNamesPattern = Pattern.compile("sequential_name = (.+)");
-        Pattern randomNamesPattern = Pattern.compile("random_names = \\{\\s+(.+)\\s+\\}");
-
-        Matcher sequentialNamesMatcher;
-        Matcher randomNamesMatcher;
-
         boolean isProcessed = false;
 
         while (sequentialRandomMatcher.find()) {
             String result = sequentialRandomMatcher.group();
-            System.out.println("raw string for fleet names: " + result);
 
-            sequentialNamesMatcher = sequentialNamesPattern.matcher(result);
-            randomNamesMatcher = randomNamesPattern.matcher(result);
+            String locValue = extractSequentialNames(result);
 
-            String outerSequential = "";
-            if (sequentialNamesMatcher.find()) {
-                outerSequential = sequentialNamesMatcher.group();
-                String innerSequential = outerSequential
-                        .replace("sequential_name = ", "")
-                        .replace("\"", "");
+            categoryEntries.setPrimaryRaw(result);
 
-                categoryEntries.setPrimaryRaw(innerSequential);
+            String sequentialKey = extractSequentialKey(locValue);
+            String locKey = locPrefix.concat(sequentialKey);
 
-                String sequentialOld = innerSequential.subSequence(
-                        innerSequential.indexOf("%")+1,
-                        innerSequential.lastIndexOf("%")
-                ).toString();
-                String sequentialKey = SequentialKeys.valueOf(sequentialOld).label;
-                
-                String locKey = locPrefix.concat(sequentialKey);
-                String locValue = innerSequential
-                        .replace(sequentialOld, sequentialKey)
-                        .replace("%", "$");
-                
-                categoryEntries.put(locKey, locValue);
+            categoryEntries.put(locKey, locValue);
+
+            String innerRandom = extractRandomNames(result);
+            categoryEntries.setSecondaryRaw(innerRandom);
+
+            ArrayList<String> randomNames = extractNames(innerRandom);
+
+            for (String name : randomNames) {
+                String cleanName = name.replace("\"", "");
+                String key = locPrefix.concat(StringUtils.stripAccents(cleanName).replace(" ", "_").toLowerCase());
+
+                categoryEntries.put(key, cleanName);
             }
 
-            String outerRandom = "";
-            if (randomNamesMatcher.find()) {
-                outerRandom = randomNamesMatcher.group();
-                String innerRandom = outerRandom
-                        .replace("random_names = ", "")
-                        .replace("{", "")
-                        .replace("}", "");
-
-                categoryEntries.setSecondaryRaw(innerRandom);
-
-                ArrayList<String> randomNames = extractNames(innerRandom);
-
-                for (String name : randomNames) {
-                    String cleanName = name.replace("\"", "");
-                    String key = locPrefix.concat(StringUtils.stripAccents(cleanName).replace(" ", "_").toLowerCase());
-
-                    categoryEntries.put(key, cleanName);
-                }
-            }
 
             isProcessed = true;
         }
         while (onlySequentialMatcher.find() && ! isProcessed) {
             String result = onlySequentialMatcher.group();
 
-            sequentialNamesMatcher = sequentialNamesPattern.matcher(result);
+            String locValue = extractSequentialNames(result);
+            String sequentialKey = extractSequentialKey(locValue);
 
-            String outerSequential = "";
-            if (sequentialNamesMatcher.find()) {
-                outerSequential = sequentialNamesMatcher.group();
-                String innerSequential = outerSequential
-                        .replace("sequential_name = ", "")
-                        .replace("\"", "")
-                        .replace("{", "")
-                        .replace("}", "");
+            String locKey = locPrefix.concat(sequentialKey);
 
-                categoryEntries.setPrimaryRaw(innerSequential);
+            categoryEntries.put(locKey, locValue);
 
-                String sequentialOld = innerSequential.subSequence(
-                        innerSequential.indexOf("%") + 1,
-                        innerSequential.lastIndexOf("%")
-                ).toString();
-                String sequentialKey = SequentialKeys.valueOf(sequentialOld).label;
-
-                String locKey = locPrefix.concat(sequentialKey);
-                String locValue = "\"".concat(
-                        innerSequential
-                                .replace(sequentialOld, sequentialKey)
-                                .replace("%", "$")
-                                .replace("\"", ""))
-                        .concat("\"");
-
-                categoryEntries.put(locKey, locValue);
-            }
         }
+
         while (onlyRandomMatcher.find() &&  ! isProcessed) {
             String result = onlyRandomMatcher.group();
 
-            randomNamesMatcher = randomNamesPattern.matcher(result);
+            String innerRandom = extractRandomNames(result);
 
-            String outerRandom = "";
-            if (randomNamesMatcher.find()) {
-                outerRandom = randomNamesMatcher.group();
-                String innerRandom = outerRandom
-                        .replace("random_name = ", "")
-                        .replace("\"", "")
-                        .replace("{", "")
-                        .replace("}", "");
+            categoryEntries.setPrimaryRaw(innerRandom);
 
-                categoryEntries.setPrimaryRaw(innerRandom);
+            ArrayList<String> randomNames = extractNames(innerRandom);
 
-                ArrayList<String> randomNames = extractNames(innerRandom);
+            for (String name : randomNames) {
+                String cleanName = name.replace("\"", "");
+                String key = locPrefix.concat(StringUtils.stripAccents(cleanName).replace(" ", "_").toLowerCase());
 
-                for (String name : randomNames) {
-                    String cleanName = name.replace("\"", "");
-                    String key = locPrefix.concat(StringUtils.stripAccents(cleanName).replace(" ", "_").toLowerCase());
-
-                    categoryEntries.put(key, cleanName);
-                }
+                categoryEntries.put(key, cleanName);
             }
+
         }
 
         return categoryEntries;
@@ -521,65 +472,21 @@ public class Converter {
             }
 
             if ( ! outer.contains("random_names")) {
-                Pattern valuePattern = Pattern.compile("sequential_name = \\\"(.+)(?=\\\")");
-                Matcher valueMatcher = valuePattern.matcher(outer);
 
-                String value = "";
-
-                if (valueMatcher.find()) {
-                    value = valueMatcher.group();
-                    value = value
-                            .replace("sequential_name = ", "")
-                            .replace("\"", "");
-                }
-
-                String locValue = "";
-
-                if (!value.isBlank() && value.contains("%")) {
-                    String sequentialOld = value.subSequence(
-                            value.indexOf("%") + 1,
-                            value.lastIndexOf("%")
-                    ).toString();
-
-                    String sequentialKey = SequentialKeys.valueOf(sequentialOld).label;
-                    locValue = "\"".concat(
-                                    value
-                                            .replace(sequentialOld, sequentialKey)
-                                            .replace("%", "$")
-                                            .replace("\"", ""))     // I want to control where those " go to
-                            .concat("\"");
-                }
+                String value = extractSequentialNames(outer);
 
                 String locKey = "";
 
-                if (!armyKey.isBlank()) {
+                if ( ! armyKey.isBlank()) {
                     locKey = locPrefix.concat(armyKey.toLowerCase());
                 }
 
-                if (!locKey.isEmpty() && !locValue.isEmpty()) {
-                    map.put(locKey, locValue);
+                if ( ! locKey.isEmpty() && ! value.isEmpty()) {
+                    map.put(locKey, value);
                 }
             } else {
-                Pattern sequentialPattern = Pattern.compile("sequential_name = \\\"(.+)(?=\\\")");
-                Pattern randomPattern = Pattern.compile("random_names = \\{\\s+(.+)\\s+\\}");
-
-                Matcher sequentialMatcher = sequentialPattern.matcher(outer);
-                Matcher randomMatcher = randomPattern.matcher(outer);
-
-                String sequentialInner = "";
-                String randomInner = "";
-
-                if (sequentialMatcher.find()) {
-                    sequentialInner = sequentialMatcher.group();
-                }
-
-                if (randomMatcher.find()) {
-                    randomInner = randomMatcher.group();
-
-                    randomInner = randomInner
-                            .replace("random_names = {", "")
-                            .replace("}", "");
-                }
+                String sequentialInner = extractSequentialNames(outer);
+                String randomInner = extractRandomNames(outer);
 
                 ArrayList<String> randomNames = new ArrayList<>();
 
@@ -588,36 +495,19 @@ public class Converter {
 
                     for (String name : randomNames) {
                         String cleanName = name.replace("\"", "");
-                        String key = locPrefix.concat(StringUtils.stripAccents(cleanName).replace(" ", "_").toLowerCase());
+                        String key = locPrefix.concat(
+                                StringUtils.stripAccents(cleanName)
+                                        .replace(" ", "_")
+                                        .toLowerCase()
+                        );
 
                         map.put(key, cleanName);
                     }
                 }
 
-                // TODO: where do those additional " come from for ORD entries
-                if (! sequentialInner.isEmpty() && ! sequentialInner.isBlank()) {
-                    String innerSequential = sequentialInner
-                            .replace("sequential_name = ", "")
-                            .replace("\"", "")
-                            .replace("{", "")
-                            .replace("}", "");
+                String locKey = locPrefix.concat(extractSequentialKey(sequentialInner));
 
-                    String sequentialOld = innerSequential.subSequence(
-                            innerSequential.indexOf("%") + 1,
-                            innerSequential.lastIndexOf("%")
-                    ).toString();
-                    String sequentialKey = SequentialKeys.valueOf(sequentialOld).label;
-
-                    String locKey = locPrefix.concat(sequentialKey);
-                    String locValue = "\"".concat(
-                                    innerSequential
-                                            .replace(sequentialOld, sequentialKey)
-                                            .replace("%", "$"))
-                            .concat("\"");
-
-                    map.put(locKey, locValue);
-                }
-
+                map.put(locKey, sequentialInner);
             }
         }
 
@@ -626,9 +516,6 @@ public class Converter {
 
         return map;
     }
-
-
-
 
 
     /**
@@ -644,9 +531,13 @@ public class Converter {
 
         LocEntryMap allShipClasses = new LocEntryMap("Ship Classes", null);
 
+        Map<File, String> fileContents = new HashMap<>();
+
         for (File file : nameListFiles) {
             try (FileInputStream readerStream = new FileInputStream(file)){
                 String fileContent = IOUtils.toString(readerStream);
+
+                fileContents.put(file, fileContent);
 
                 Matcher empireShipClassesMatcher = empireShipClasses.matcher(fileContent);
 
@@ -664,11 +555,13 @@ public class Converter {
 
                         // Both patterns need to work, otherwise entry is invalid
                         if ( shipClassKeyMatcher.find() && shipClassNameMatcher.find()) {
-                            String key = shipClassKeyMatcher.group();
+                            String rawkey = shipClassKeyMatcher.group();
                             String value = shipClassNameMatcher.group()
                                     .replace("{ ", "")
                                     .replace(" }", "")
                                     .replace("\"", "");
+
+                            String key = "SWFR_SHIP_CLASS_" + rawkey.replace("swp_", "");
 
                             if ( ! allShipClasses.containsKey(key)) {
                                 allShipClasses.put(key, value);
@@ -681,9 +574,49 @@ public class Converter {
             }
         }
 
+        for (Map.Entry<File, String> entry : fileContents.entrySet()) {
+            // TODO: replace the old keys for each file
+            String content = entry.getValue();
+
+            Matcher shipClasses = empireShipClasses.matcher(content);
+
+            if (shipClasses.find()) {
+                String classesBlock = shipClasses.group();
+                String newClassesBlock = classesBlock;
+
+                Matcher classNameMatcher = shipClassesEntry.matcher(classesBlock.replace("ship_class_names = {", ""));
+
+                while (classNameMatcher.find()) {
+                    String classEntry = classNameMatcher.group();
+
+                    Matcher shipClassesKeyMatcher = shipClassesKeys.matcher(classEntry);
+
+                    if (shipClassesKeyMatcher.find()) {
+                        String key = shipClassesKeyMatcher.group();
+
+                        for (Map.Entry<String, String> shipClass : allShipClasses.entrySet()) {
+                            if (shipClass.getKey().replace("SWFR_SHIP_CLASS", "swp").equals(key)) {
+                                newClassesBlock = newClassesBlock.replace(
+                                        classEntry,
+                                        classEntry.replace(
+                                            shipClass.getValue(),
+                                                shipClass.getKey()
+                                        ).replace("\"", "")
+                                );
+                            }
+                        }
+                    }
+                }
+
+
+                content = content.replace(classesBlock, newClassesBlock);
+
+                writeToNamelistFile(entry.getKey(), content);
+            }
+        }
+
         return allShipClasses;
     }
-
 
 
     // Utility methods
@@ -700,7 +633,60 @@ public class Converter {
                         generateCategoryBody(entries)
                 );
     }
-    
+
+    private static String extractRandomNames(String content) throws IllegalArgumentException {
+        Pattern randomPattern = Pattern.compile("random_names = \\{\\s+(.+)\\s+\\}");
+        Matcher randomMatcher = randomPattern.matcher(content);
+
+        if (randomMatcher.find()) {
+            return randomMatcher.group()
+                    .replace("random_names = {", "")
+                    .replace("}", "");
+        } else throw new IllegalArgumentException("No matches for provided String found!");
+    }
+
+    private static String extractSequentialNames(String content) throws IllegalArgumentException {
+        Pattern sequentialPattern = Pattern.compile("sequential_name = (.+)");
+        Matcher sequentialMatcher = sequentialPattern.matcher(content);
+
+        if (sequentialMatcher.find()) {
+            String outerSequential = sequentialMatcher.group();
+
+            String innerSequential = outerSequential
+                    .replace("sequential_name = ", "")
+                    .replace("\"", "")
+                    .replace("{", "")
+                    .replace("}", "");
+
+            String oldKey = innerSequential.subSequence(
+                    innerSequential.indexOf("%")+1,
+                    innerSequential.lastIndexOf("%")
+            ).toString();
+
+            String newKey = SequentialKeys.valueOf(oldKey).label;
+
+            return innerSequential
+                    .replace(oldKey, newKey)
+                    .replace("%", "$");
+        } else throw new IllegalArgumentException("No matches for provided String found!");
+    }
+
+    private static String extractSequentialKey(String content) throws IllegalArgumentException {
+        if (content != null && ! content.isEmpty() && ! content.isBlank()) {
+            return content.substring(
+                    content.indexOf("$")+1,
+                    content.lastIndexOf("$")
+            );
+        } else throw new IllegalArgumentException("No extraction of key string possible!");
+    }
+
+
+    /**
+     * Generates the comment header for the loc file
+     * @param empireName Name of the empire
+     * @param category Name of the category
+     * @return String of the category header
+     */
     public static String generateCategoryCommentHeader(String empireName, String category) {
         String middle = "";
 
@@ -824,6 +810,8 @@ public class Converter {
         while (namesMatcher.find()){
             String group = namesMatcher.group();
 
+            if (Pattern.compile("[A-Z]+_").matcher(group).find()) continue;
+
             namesOutput.add(group);
         }
 
@@ -831,14 +819,17 @@ public class Converter {
     }
 
 
+    // TODO: does not work with army names, need maybe extra method
     private static void replaceKeys(ArrayList<LocEntryMap> categories, String content, File original) {
         String newContent = content;
 
         for (LocEntryMap map : categories) {
+            if (map.isEmpty()) continue;
+
             String toReplace = map.getPrimaryRaw();
 
             if (toReplace == null || toReplace.isEmpty()) {
-                break;
+                continue;
             }
 
             String keyList = "";

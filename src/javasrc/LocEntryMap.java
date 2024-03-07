@@ -6,7 +6,7 @@ import java.util.TreeMap;
 /**
  * Use this with the following structure:
  * key: localisation key, e.g. IMP_SHIP_monitor
- * value: localisation value, e.g. "Monitor" (note, *with* the parentheses!)
+ * value: localisation value, e.g. "Monitor" (note, <b>without</b> the parentheses!)
  */
 public class LocEntryMap extends TreeMap<String, String> {
     final String category;
