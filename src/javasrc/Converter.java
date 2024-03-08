@@ -2,16 +2,15 @@ package javasrc;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
-import javax.print.DocFlavor;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static javasrc.StringTools.extractNames;
 
 @SuppressWarnings("RegExpRedundantEscape")
 public class Converter {
@@ -287,7 +286,7 @@ public class Converter {
         ArrayList<LocEntryMap> allCategories = new ArrayList<>();
 
         for (NameListCategory category : categories) {
-            allCategories.add(generateCategoryEntries(category, content));
+            allCategories.add(LocEntryMap.generateCategoryEntries(category, content));
         }
 
 
@@ -311,18 +310,16 @@ public class Converter {
 
         for (LocEntryMap map : allCategories) {
             output = output.concat(
-                    generateCategory(empireName, map.category, map)
+                    StringTools.generateCategory(empireName, map.category, map)
             ).concat("\n\n");
-
-
         }
 
-        replaceKeys(allCategories, content, namesListFile);
+        FileUtils.replaceKeys(allCategories, content, namesListFile);
 
         System.out.println(output);
 
         // Disarmed for the moment; TODO: Rearm
-        writeToBOMFile(locFile, output);
+        FileUtils.writeToBOMFile(locFile, output);
     }
 
     //TODO: regnal names
@@ -343,19 +340,6 @@ public class Converter {
 //        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
 //    }
 
-
-    private enum SequentialKeys {
-        O("ORD"),
-        C("C"),
-        CC("CC"),
-        CCC("CCC"),
-        R("R");
-
-        final String label;
-        SequentialKeys(String label) {
-            this.label = label;
-        }
-    }
     private static LocEntryMap createFleetNames(String empirePrefix, String empireName, String content) throws IOException {
         final String category = "Fleet Names";
         final String locCategory = "_fleet_";
@@ -383,16 +367,16 @@ public class Converter {
         while (sequentialRandomMatcher.find()) {
             String result = sequentialRandomMatcher.group();
 
-            String locValue = extractSequentialNames(result);
+            String locValue = StringTools.extractSequentialNames(result);
 
             categoryEntries.setPrimaryRaw(result);
 
-            String sequentialKey = extractSequentialKey(locValue);
+            String sequentialKey = StringTools.extractSequentialKey(locValue);
             String locKey = locPrefix.concat(sequentialKey);
 
             categoryEntries.put(locKey, locValue);
 
-            String innerRandom = extractRandomNames(result);
+            String innerRandom = StringTools.extractRandomNames(result);
             categoryEntries.setSecondaryRaw(innerRandom);
 
             ArrayList<String> randomNames = extractNames(innerRandom);
@@ -410,8 +394,8 @@ public class Converter {
         while (onlySequentialMatcher.find() && ! isProcessed) {
             String result = onlySequentialMatcher.group();
 
-            String locValue = extractSequentialNames(result);
-            String sequentialKey = extractSequentialKey(locValue);
+            String locValue = StringTools.extractSequentialNames(result);
+            String sequentialKey = StringTools.extractSequentialKey(locValue);
 
             String locKey = locPrefix.concat(sequentialKey);
 
@@ -422,7 +406,7 @@ public class Converter {
         while (onlyRandomMatcher.find() &&  ! isProcessed) {
             String result = onlyRandomMatcher.group();
 
-            String innerRandom = extractRandomNames(result);
+            String innerRandom = StringTools.extractRandomNames(result);
 
             categoryEntries.setPrimaryRaw(innerRandom);
 
@@ -473,7 +457,7 @@ public class Converter {
 
             if ( ! outer.contains("random_names")) {
 
-                String value = extractSequentialNames(outer);
+                String value = StringTools.extractSequentialNames(outer);
 
                 String locKey = "";
 
@@ -485,8 +469,8 @@ public class Converter {
                     map.put(locKey, value);
                 }
             } else {
-                String sequentialInner = extractSequentialNames(outer);
-                String randomInner = extractRandomNames(outer);
+                String sequentialInner = StringTools.extractSequentialNames(outer);
+                String randomInner = StringTools.extractRandomNames(outer);
 
                 ArrayList<String> randomNames = new ArrayList<>();
 
@@ -505,7 +489,7 @@ public class Converter {
                     }
                 }
 
-                String locKey = locPrefix.concat(extractSequentialKey(sequentialInner));
+                String locKey = locPrefix.concat(StringTools.extractSequentialKey(sequentialInner));
 
                 map.put(locKey, sequentialInner);
             }
@@ -575,7 +559,6 @@ public class Converter {
         }
 
         for (Map.Entry<File, String> entry : fileContents.entrySet()) {
-            // TODO: replace the old keys for each file
             String content = entry.getValue();
 
             Matcher shipClasses = empireShipClasses.matcher(content);
@@ -608,298 +591,11 @@ public class Converter {
                     }
                 }
 
-
                 content = content.replace(classesBlock, newClassesBlock);
 
-                writeToNamelistFile(entry.getKey(), content);
+                FileUtils.writeToNamelistFile(entry.getKey(), content);
             }
         }
-
         return allShipClasses;
     }
-
-
-    // Utility methods
-    public static String generatePrefix(String empireName, String categoryKey, int lengthEmpireKey) {
-        return " " + (empireName.substring(0, lengthEmpireKey) + "_" + categoryKey + "_").toUpperCase();
-    }
-
-    private static String generateCategory(String empireName, String category, LocEntryMap entries) {
-        if (entries.isEmpty()) return "";
-
-        return generateCategoryCommentHeader(empireName, category)
-                .concat("\n")
-                .concat(
-                        generateCategoryBody(entries)
-                );
-    }
-
-    private static String extractRandomNames(String content) throws IllegalArgumentException {
-        Pattern randomPattern = Pattern.compile("random_names = \\{\\s+(.+)\\s+\\}");
-        Matcher randomMatcher = randomPattern.matcher(content);
-
-        if (randomMatcher.find()) {
-            return randomMatcher.group()
-                    .replace("random_names = {", "")
-                    .replace("}", "");
-        } else throw new IllegalArgumentException("No matches for provided String found!");
-    }
-
-    private static String extractSequentialNames(String content) throws IllegalArgumentException {
-        Pattern sequentialPattern = Pattern.compile("sequential_name = (.+)");
-        Matcher sequentialMatcher = sequentialPattern.matcher(content);
-
-        if (sequentialMatcher.find()) {
-            String outerSequential = sequentialMatcher.group();
-
-            String innerSequential = outerSequential
-                    .replace("sequential_name = ", "")
-                    .replace("\"", "")
-                    .replace("{", "")
-                    .replace("}", "");
-
-            String oldKey = innerSequential.subSequence(
-                    innerSequential.indexOf("%")+1,
-                    innerSequential.lastIndexOf("%")
-            ).toString();
-
-            String newKey = SequentialKeys.valueOf(oldKey).label;
-
-            return innerSequential
-                    .replace(oldKey, newKey)
-                    .replace("%", "$");
-        } else throw new IllegalArgumentException("No matches for provided String found!");
-    }
-
-    private static String extractSequentialKey(String content) throws IllegalArgumentException {
-        if (content != null && ! content.isEmpty() && ! content.isBlank()) {
-            return content.substring(
-                    content.indexOf("$")+1,
-                    content.lastIndexOf("$")
-            );
-        } else throw new IllegalArgumentException("No extraction of key string possible!");
-    }
-
-
-    /**
-     * Generates the comment header for the loc file
-     * @param empireName Name of the empire
-     * @param category Name of the category
-     * @return String of the category header
-     */
-    public static String generateCategoryCommentHeader(String empireName, String category) {
-        String middle = "";
-
-        if (empireName.isBlank() || empireName.isEmpty()) {
-            middle = StringConstants.category_header.replace("§§§ ", "").replace("$$$", category);
-        } else {
-            middle = StringConstants.category_header.replace("§§§", empireName).replace("$$$", category);
-        }
-
-        StringBuilder topAndBottom = new StringBuilder();
-
-        int length = middle.length();
-
-        topAndBottom.append("#".repeat(length));
-
-        return topAndBottom + "\n" + middle + "\n" + topAndBottom;
-    }
-
-    private static String generateCategoryBody(LocEntryMap map) {
-        String body = "";
-        
-        for (Map.Entry<String, String> entry : map.entrySet()){
-            body = body.concat(LocEntryMap.getLocString(entry)).concat("\n");
-        }
-        
-        return body;
-    }
-
-
-    private static LocEntryMap generateCategoryEntries(NameListCategory category, String content) {
-        if (category instanceof SimpleNameListCategory) {
-
-            return generateCategoryEntries(
-                    ((SimpleNameListCategory) category).getRawPattern().matcher(content),
-                    ((SimpleNameListCategory) category).getOverhead().matcher(content),
-                    category.categoryName,
-                    category.buildLocPrefix(),
-                    ((SimpleNameListCategory) category).isMultipleEntriespossible());
-        } else return null;
-    }
-    /**
-     *
-     * @param matcher Finds all relevant groups from provided content
-     * @param overheadMatcher To remove eventual overhead (e.g. block keys) from content
-     * @param category Category that is worked on (e.g. generic ship names)
-     * @param locPrefix prefix of the localisations key
-     * @return Map with all localisation entries
-     */
-    private static LocEntryMap generateCategoryEntries(Matcher matcher, Matcher overheadMatcher, String category, String locPrefix, boolean allGroups){
-        LocEntryMap categoryEntryMap =  new LocEntryMap(category);
-
-        // If multiple groups fall into the same category, e.g. first names, bundle them
-        if (allGroups) {
-            while (matcher.find()) {
-                String list = matcher.group();
-
-                if (overheadMatcher.find()) {
-                    String overhead = overheadMatcher.group();
-                    list = list.replace(overhead, "");
-                }
-
-                categoryEntryMap.setPrimaryRaw(list);
-
-                ArrayList<String> namesList = extractNames(list);
-
-                for (String name : namesList) {
-                    String key = StringUtils.stripAccents(
-                            name
-                                    .replace("\"", "")
-                                    .replace(" ", "_")
-                                    .replace("'", "")
-                                    .stripTrailing()
-                    );
-                    String value = name.replace("\"", "");
-
-                    categoryEntryMap.put(locPrefix.concat(key.toLowerCase()), value);
-                }
-            }
-        } else {
-            if (matcher.find()) {
-                String list = matcher.group();
-
-                if (overheadMatcher.find()) {
-                    String overhead = overheadMatcher.group();
-                    list = list.replace(overhead, "");
-                }
-
-                categoryEntryMap.setPrimaryRaw(list);
-
-                ArrayList<String> namesList = extractNames(list);
-
-                for (String name : namesList) {
-                    String key = StringUtils.stripAccents(
-                            name
-                                    .replace("\"", "")
-                                    .replace(" ", "_")
-                                    .replace("'", "")
-                                    .stripTrailing()
-                    );
-                    String value = name.replace("\"", "");
-
-                    categoryEntryMap.put(locPrefix.concat(key.toLowerCase()), value);
-                }
-            }
-        }
-        return categoryEntryMap;
-    }
-
-
-    /**
-     * General regex to extract space divided name lists into a string array
-     * @param raw the namelist
-     * @return A singular name
-     */
-    private static ArrayList<String> extractNames(String raw) {
-        Pattern namesPattern = Pattern.compile("\"(.*?)\"|(\\S+)");
-        Matcher namesMatcher = namesPattern.matcher(raw);
-
-        ArrayList<String> namesOutput = new ArrayList<>();
-
-        while (namesMatcher.find()){
-            String group = namesMatcher.group();
-
-            if (Pattern.compile("[A-Z]+_").matcher(group).find()) continue;
-
-            namesOutput.add(group);
-        }
-
-        return namesOutput;
-    }
-
-
-    // TODO: does not work with army names, need maybe extra method
-    private static void replaceKeys(ArrayList<LocEntryMap> categories, String content, File original) {
-        String newContent = content;
-
-        for (LocEntryMap map : categories) {
-            if (map.isEmpty()) continue;
-
-            String toReplace = map.getPrimaryRaw();
-
-            if (toReplace == null || toReplace.isEmpty()) {
-                continue;
-            }
-
-            String keyList = "";
-            int perLine = 0;
-            for (Map.Entry<String, String> entry : map.entrySet()) {
-                keyList = keyList
-                        .concat(entry.getKey())
-                        .concat(" ");
-                if (perLine == 5) {
-                    keyList = keyList.concat("\n\t\t\t");
-                    perLine = 0;
-                }
-                perLine++;
-            }
-
-            newContent = newContent.replace(toReplace, keyList);
-
-            if (map.getSecondaryRaw() != null) {
-                if (!map.getSecondaryRaw().isEmpty() || !map.getSecondaryRaw().isBlank()) {
-                    String secondaryKeys = "";
-                    for (Map.Entry<String, String> entry : map.entrySet()) {
-                        // Check if the entry is in secondaryRaw, mind the differing SequentialKey flavour
-
-
-                        for (SequentialKeys key : SequentialKeys.values()) {
-                            if (entry.getValue().contains(key.label)) {
-                                secondaryKeys = entry.getValue()
-                                        .replace(key.label, key.name())
-                                        .replace("$", "%");
-                            }
-                        }
-                    }
-                    newContent = newContent.replace(map.getSecondaryRaw(), secondaryKeys);
-                }
-            }
-        }
-
-        writeToNamelistFile(original, newContent);
-    }
-
-
-    private static void writeToNamelistFile (File nameListFile, String content) {
-        try (FileOutputStream fos = new FileOutputStream(nameListFile)){
-            fos.write(content.getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException();
-        }
-    }
-
-
-    private static final byte[] BOM = {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
-    public static void writeToBOMFile(File file, String content)  {
-        if (file.exists()) {
-            System.out.println("File already exists, aborting!");
-            return;
-        }
-        try (FileOutputStream fos = new FileOutputStream(file)){
-            fos.write(BOM);
-            fos.write(content.getBytes(StandardCharsets.UTF_8));}
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    public static void writeToBOMFile(File file, LocEntryMap entries)  {
-        String content = "l_english:\n" + generateCategory("", "Ship Classes", entries);
-
-        writeToBOMFile(file, content);
-    }
-
 }

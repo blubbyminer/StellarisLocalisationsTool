@@ -14,15 +14,15 @@ public class SimpleNameListCategory extends NameListCategory{
     private final Pattern rawPattern;
     private final Pattern overhead;
 
-    public boolean isMultipleEntriespossible() {
-        return multipleEntriespossible;
+    public boolean isMultipleEntriesPossible() {
+        return multipleEntriesPossible;
     }
-    private final boolean multipleEntriespossible;
+    private final boolean multipleEntriesPossible;
     public SimpleNameListCategory(String empireName, String empirePrefix, String categoryName, String categoryLoc, Pattern rawPattern, Pattern overhead, boolean multipleEntriespossible){
         super(empireName, empirePrefix, categoryName, categoryLoc);
         this.rawPattern = rawPattern;
         this.overhead = overhead;
-        this.multipleEntriespossible = multipleEntriespossible;
+        this.multipleEntriesPossible = multipleEntriespossible;
     }
 
 }

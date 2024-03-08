@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class Main {
@@ -42,13 +43,13 @@ public class Main {
 
         Map<File, File> locFilesToCreate = new TreeMap<>();
 
-        for (File file : nameListDir.listFiles()) {
+        for (File file : Objects.requireNonNull(nameListDir.listFiles())) {
             if ( ! nameListFiles.contains(file)) {
                 nameListFiles.add(file);
             }
         }
 
-        for (File file : localisationsDir.listFiles()) {
+        for (File file : Objects.requireNonNull(localisationsDir.listFiles())) {
             if ( ! existingLocFiles.contains(file)) {
                 existingLocFiles.add(file);
             }
@@ -84,7 +85,7 @@ public class Main {
         if ( ! shipClassLocFile.exists()) {
             LocEntryMap shipClasses = Converter.createShipClassNames(nameListFiles);
 
-            Converter.writeToBOMFile(shipClassLocFile, shipClasses);
+            FileUtils.writeToBOMFile(shipClassLocFile, shipClasses);
         }
 
         // create missing locfiles
@@ -95,11 +96,5 @@ public class Main {
                 throw new RuntimeException(e);
             }
         }
-
-        /*
-        TODO:
-            - Rückschrieb der Keys anstoßen
-         */
-
     }
 }

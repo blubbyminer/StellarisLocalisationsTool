@@ -1,6 +1,6 @@
 package javasrc;
 
-abstract class NameListCategory {
+public abstract class NameListCategory {
     final String empireName;
     final String empirePrefix;
     final String categoryName;
