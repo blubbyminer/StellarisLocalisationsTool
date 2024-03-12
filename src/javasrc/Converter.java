@@ -35,7 +35,6 @@ public class Converter {
         String content = "";
 
         String empireName = namesListFile.getName().replace("SWP_", "").replace(".txt", "");
-        String speciesPrefix = namesListFile.getName().replace("SWP_", "").substring(0, 3).toUpperCase();
 
         try (FileInputStream readerStream = new FileInputStream(namesListFile)){
             content = IOUtils.toString(readerStream);
@@ -48,7 +47,7 @@ public class Converter {
             throw new IllegalArgumentException("Content is empty, aborting!");
         }
 
-        ArrayList<AbstractLocEntryMap> categories = new ArrayList<>();
+        ArrayList<AbstractLocEntryMap<?>> categories = new ArrayList<>();
 
         categories.add(
                 new RandomLocEntryMap(
@@ -227,13 +226,15 @@ public class Converter {
         );
 
         // TODO: here be fleet names
-        CompositeLocEntryMap fleetNames = new CompositeLocEntryMap(
-                "Fleet Names",
-                empireName,
-                "",
-                "",
-                "fleet_names = \\{\\s+",
-                content
+        categories.add(
+                new CompositeLocEntryMap(
+                    "Fleet Names",
+                    empireName,
+                    "FLEET",
+                    "",
+                    "fleet_names = \\{\\s+",
+                    content
+            )
         );
         // TODO: here be army names
 
@@ -308,97 +309,6 @@ public class Converter {
 //        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
 //    }
 
-    // TODO: ComplexLocEntryMap
-    private static RandomLocEntryMap createFleetNames(String empirePrefix, String empireName, String content) throws IOException {
-        final String category = "Fleet Names";
-        final String locCategory = "_fleet_";
-
-        final String locPrefix = " " + empirePrefix + locCategory;
-
-        if (content.isEmpty() || content.isBlank()) {
-            System.out.println("Empty file, presuming error, aborting!");
-            throw new IOException("Empty content");
-        }
-
-        RandomLocEntryMap categoryEntries = new RandomLocEntryMap(
-                category,
-                locCategory,
-                empireName,
-                null,
-                null,false);
-
-        // Cover all cases, only one can come true
-        Pattern sequentialRandomPattern = Pattern.compile("fleet_names = \\{\\s+random_names = \\{\\s+(.*)\\s+\\}\\s+sequential_name = (.+)");
-        Pattern onlySequentialPattern = Pattern.compile("fleet_names = \\{\\s+sequential_name = (.+)");
-        Pattern onlyRandomPattern = Pattern.compile("fleet_names = \\{\\s+random_names = \\{\\s+(.*)\\s+\\}");
-
-        Matcher sequentialRandomMatcher = sequentialRandomPattern.matcher(content);
-        Matcher onlySequentialMatcher = onlySequentialPattern.matcher(content);
-        Matcher onlyRandomMatcher = onlyRandomPattern.matcher(content);
-
-        boolean isProcessed = false;
-
-        while (sequentialRandomMatcher.find()) {
-            String result = sequentialRandomMatcher.group();
-
-            String locValue = StringTools.extractSequentialNames(result);
-
-            categoryEntries.setPrimaryRaw(result);
-
-            String sequentialKey = StringTools.extractSequentialKey(locValue);
-            String locKey = locPrefix.concat(sequentialKey);
-
-            categoryEntries.put(locKey, locValue);
-
-            String innerRandom = StringTools.extractRandomNames(result);
-            categoryEntries.setSecondaryRaw(innerRandom);
-
-            ArrayList<String> randomNames = extractNames(innerRandom);
-
-            for (String name : randomNames) {
-                String cleanName = name.replace("\"", "");
-                String key = locPrefix.concat(StringUtils.stripAccents(cleanName).replace(" ", "_").toLowerCase());
-
-                categoryEntries.put(key, cleanName);
-            }
-
-
-            isProcessed = true;
-        }
-        while (onlySequentialMatcher.find() && ! isProcessed) {
-            String result = onlySequentialMatcher.group();
-
-            String locValue = StringTools.extractSequentialNames(result);
-            String sequentialKey = StringTools.extractSequentialKey(locValue);
-
-            String locKey = locPrefix.concat(sequentialKey);
-
-            categoryEntries.put(locKey, locValue);
-
-        }
-
-        while (onlyRandomMatcher.find() &&  ! isProcessed) {
-            String result = onlyRandomMatcher.group();
-
-            String innerRandom = StringTools.extractRandomNames(result);
-
-            categoryEntries.setPrimaryRaw(innerRandom);
-
-            ArrayList<String> randomNames = extractNames(innerRandom);
-
-            for (String name : randomNames) {
-                String cleanName = name.replace("\"", "");
-                String key = locPrefix.concat(StringUtils.stripAccents(cleanName).replace(" ", "_").toLowerCase());
-
-                categoryEntries.put(key, cleanName);
-            }
-
-        }
-
-        return categoryEntries;
-    }
-
-
     private static RandomLocEntryMap createArmyNames(String empirePrefix, String empireName, String content) throws IOException {
         String locPrefix = " " + empirePrefix + "_ARMY_";
 
@@ -470,7 +380,7 @@ public class Converter {
         }
 
         // TODO: Unterschied zwischen %O% und $ORD$ bedenken
-        map.setPrimaryRaw(raw);
+        map.setRandomRaw(raw);
 
         return map;
     }

@@ -16,21 +16,11 @@ import static javasrc.StringTools.extractNames;
  * value: localisation value, e.g. "Monitor" (note, <b>without</b> the parentheses!)
  */
 public class RandomLocEntryMap extends AbstractLocEntryMap<String> {
-    private String primaryRaw;
-    public String getPrimaryRaw() {
-        return primaryRaw;
+    public String getRandomRaw() {
+        return randomRaw;
     }
-    public void setPrimaryRaw(String primaryRaw) {
-        this.primaryRaw = primaryRaw;
-    }
-
-
-    private String secondaryRaw;
-    public String getSecondaryRaw() {
-        return secondaryRaw;
-    }
-    public void setSecondaryRaw(String secondaryRaw) {
-        this.secondaryRaw = secondaryRaw;
+    public void setRandomRaw(String randomRaw) {
+        this.randomRaw = randomRaw;
     }
 
 
@@ -51,13 +41,13 @@ public class RandomLocEntryMap extends AbstractLocEntryMap<String> {
         this.multipleEntriesPossible = multipleEntriesPossible;
     }
 
-    public RandomLocEntryMap(@NotNull String category, String categoryLoc, String empireName, Matcher rawMatcher, Matcher overheadMatcher, String primaryRaw, boolean multipleEntriesPossible) {
+    public RandomLocEntryMap(@NotNull String category, String categoryLoc, String empireName, Matcher rawMatcher, Matcher overheadMatcher, String randomRaw, boolean multipleEntriesPossible) {
         super(category, empireName, categoryLoc);
         this.rawMatcher = rawMatcher;
         this.overheadMatcher = overheadMatcher;
         this.multipleEntriesPossible = multipleEntriesPossible;
 
-        this.primaryRaw = primaryRaw;
+        this.randomRaw = randomRaw;
     }
 
 
@@ -69,17 +59,6 @@ public class RandomLocEntryMap extends AbstractLocEntryMap<String> {
     @Override
     public String getLocString(Map.Entry<String, String> entry) {
         return " " + entry.getKey()+ ": \"" + entry.getValue() + "\"";
-    }
-
-    @Override
-    public String generateBodyString() {
-        String body = "";
-
-        for (Map.Entry<String, String> entry : this.entrySet()){
-            body = body.concat(this.getLocString(entry)).concat("\n");
-        }
-
-        return body;
     }
 
     /**
@@ -97,7 +76,7 @@ public class RandomLocEntryMap extends AbstractLocEntryMap<String> {
                     list = list.replace(overhead, "");
                 }
 
-                this.setPrimaryRaw(list);
+                this.setRandomRaw(list);
 
                 ArrayList<String> namesList = extractNames(list);
 
@@ -123,7 +102,7 @@ public class RandomLocEntryMap extends AbstractLocEntryMap<String> {
                     list = list.replace(overhead, "");
                 }
 
-                this.setPrimaryRaw(list);
+                this.setRandomRaw(list);
 
                 ArrayList<String> namesList = extractNames(list);
 

@@ -11,6 +11,7 @@ public class FileUtils {
 
     // TODO: does not work with army names, need maybe extra method
     // Does not work with complex structures, e.g. combo from sequential and random names
+
     /*
     public static void replaceKeys(ArrayList<AbstractLocEntryMap<?>> categories, String content, File original) {
         String newContent = content;
@@ -61,9 +62,9 @@ public class FileUtils {
 
         writeToNamelistFile(original, newContent);
     }
+*/
 
 
-     */
 
     public static void writeToNamelistFile (File nameListFile, String content) {
         try (FileOutputStream fos = new FileOutputStream(nameListFile)){

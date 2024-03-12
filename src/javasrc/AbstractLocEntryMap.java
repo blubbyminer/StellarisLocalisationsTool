@@ -12,6 +12,30 @@ public abstract class AbstractLocEntryMap<C> extends TreeMap<String, C> {
     final String empireName;
     final String locPrefix;
 
+    @Nullable
+    public String getSequentialRaw() {
+        return sequentialRaw;
+    }
+
+    public void setSequentialRaw(@Nullable String sequentialRaw) {
+        this.sequentialRaw = sequentialRaw;
+    }
+
+    @Nullable
+    public String getRandomRaw() {
+        return randomRaw;
+    }
+
+    public void setRandomRaw(@Nullable String randomRaw) {
+        this.randomRaw = randomRaw;
+    }
+
+    @Nullable
+    protected String sequentialRaw;
+
+    @Nullable
+    protected String randomRaw;
+
     public AbstractLocEntryMap(String category, @Nullable String empireName, String locPrefix){
         this.category = category;
         this.empireName = empireName;
@@ -19,6 +43,16 @@ public abstract class AbstractLocEntryMap<C> extends TreeMap<String, C> {
     }
 
     protected abstract void generateCategoryEntries();
+
+    protected String generateBodyString() {
+        String body = "";
+
+        for (Map.Entry<String, C> entry : this.entrySet()){
+            body = body.concat(this.getLocString(entry)).concat("\n");
+        }
+
+        return body;
+    };
 
     protected String generateHeaderString() {
         String middle = "";
@@ -37,7 +71,6 @@ public abstract class AbstractLocEntryMap<C> extends TreeMap<String, C> {
 
         return topAndBottom + "\n" + middle + "\n" + topAndBottom;
     }
-    protected abstract String generateBodyString();
 
     public String generateCategoryString() {
         return generateHeaderString()

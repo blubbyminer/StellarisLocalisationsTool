@@ -1,13 +1,14 @@
 package javasrc;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class CompositeLocEntryMap extends AbstractLocEntryMap<String>{
-    SequentialLocEntryMap sequentialLocEntryMap;
-    RandomLocEntryMap randomLocEntryMap;
-
     // order of sequential and random names does not matter
     private final String combinedPattern = "(?:sequential_name = (.+)\\s+random_names = \\{\\s+(.*)\\s+\\}|random_names = \\{\\s+(.*)\\s+\\}\\s+sequential_name = (.+))";
     private final String sequentialOnlyPattern = "sequential_name = (.+)";
@@ -35,16 +36,66 @@ public class CompositeLocEntryMap extends AbstractLocEntryMap<String>{
         Matcher sequentialMathcer = Pattern.compile(sequentialPattern).matcher(content);
         Matcher randomMatcher = Pattern.compile(randomPattern).matcher(content);
 
+        boolean isProcessed = false;
 
+        while (compositeMatcher.find()) {
+            String result = compositeMatcher.group();
+            sequentialRaw = result;
+
+            insertSequentialNames(result);
+
+
+            String randomNames = StringTools.extractRandomNames(result);
+            randomRaw = randomNames;
+
+            insertRandomNames(randomNames);
+
+            isProcessed = true;
+        }
+
+        while (sequentialMathcer.find() && ! isProcessed) {
+            String result = sequentialMathcer.group();
+
+            sequentialRaw = result;
+
+            insertSequentialNames(result);
+        }
+
+        while (randomMatcher.find() && ! isProcessed) {
+            String result = randomMatcher.group();
+            randomRaw = result;
+
+            insertRandomNames(result);
+        }
     }
 
-    @Override
-    protected String generateBodyString() {
-        return null;
+    private void insertSequentialNames(String result) {
+        String locValue = StringTools.extractSequentialNames(result);
+        String sequentialKey = StringTools.extractSequentialKey(locValue);
+
+        String key = locPrefix.concat(sequentialKey);
+
+        put(key, locValue);
+    }
+
+    private void insertRandomNames(String raw) {
+        ArrayList<String> names = StringTools.extractNames(raw);
+
+        names.forEach(name -> {
+            String cleanName = name.replace("\"", "");
+            String key = locPrefix
+                    .concat(
+                            StringUtils.stripAccents(cleanName)
+                                    .replace(" ", "_")
+                                    .toLowerCase()
+                    );
+
+            put(key, cleanName);
+        });
     }
 
     @Override
     public String getLocString(Map.Entry<String, String> entry) {
-        return null;
+        return " " + entry.getKey()+ ": \"" + entry.getValue() + "\"";
     }
 }
