@@ -9,7 +9,7 @@ import java.util.TreeMap;
 
 public class Main {
 
-
+    public static int EMPIRE_PREFIX_LENGTH = 3;
     public static void main(String[] args) {
 
         if (args.length == 0) {
@@ -18,6 +18,18 @@ public class Main {
 
         if (args[0] == null || args[0].isEmpty() || args[0].isBlank() ) {
             System.out.println("Argument 'projectPath' was left empty or null, aborting");
+        }
+
+        if (args[1] != null) {
+            try {
+                int temp = Integer.parseInt(args[1]);
+                if (temp >= EMPIRE_PREFIX_LENGTH) {
+                    EMPIRE_PREFIX_LENGTH = temp;
+                } else throw new NumberFormatException("Values below 3 are not allowed!");
+            } catch (NumberFormatException e) {
+                System.out.println("Argument invalid, proceeding with default value for empire prefix length.");
+                System.out.println("Details: " + e.getMessage());
+            }
         }
 
         final String projectPath = args[0];
