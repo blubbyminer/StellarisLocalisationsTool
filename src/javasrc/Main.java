@@ -83,7 +83,7 @@ public class Main {
 
         // writeToFile checks again, but we can skip generating the map if it already exists
         if ( ! shipClassLocFile.exists()) {
-            LocEntryMap shipClasses = Converter.createShipClassNames(nameListFiles);
+            RandomLocEntryMap shipClasses = Converter.createShipClassNames(nameListFiles);
 
             FileUtils.writeToBOMFile(shipClassLocFile, shipClasses);
         }

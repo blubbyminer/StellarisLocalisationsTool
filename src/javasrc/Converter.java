@@ -44,277 +44,245 @@ public class Converter {
             throw new RuntimeException(e);
         }
 
-        if (content .isEmpty() || content.isBlank()) {
+        if (content.isEmpty() || content.isBlank()) {
             throw new IllegalArgumentException("Content is empty, aborting!");
         }
 
-        ArrayList<NameListCategory> categories = new ArrayList<>();
+        ArrayList<AbstractLocEntryMap> categories = new ArrayList<>();
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Generic Ship Names",
                         "SHIP",
-                        Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("ship_names = \\{\\s+generic = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Subjugator Class Ship Names",
                         "SHIP",
-                        Pattern.compile("swp_subjugator = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("swp_subjugator = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("swp_subjugator = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("swp_subjugator = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Bellator Class Ship Names",
                         "SHIP",
-                        Pattern.compile("swp_bellator = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("swp_bellator = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("swp_bellator = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("swp_bellator = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Science Ship Names",
                         "SCIENCE_SHIP",
-                        Pattern.compile("science = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("science = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("science = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("science = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Colony Ship Names",
                         "COLONY_SHIP",
-                        Pattern.compile("\\bcolonizer = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("\\bcolonizer = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("\\bcolonizer = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("\\bcolonizer = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Sponsored Colony Ship Names",
                         "SPONS_COL_SHIP",
-                        Pattern.compile("sponsored_colonizer = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("sponsored_colonizer = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("sponsored_colonizer = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("sponsored_colonizer = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Constructor Ship Names",
                         "CONSTRUCTION_SHIP",
-                        Pattern.compile("constructor = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("constructor = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("constructor = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("constructor = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Ground Transport Names",
                         "TRANSPORT",
-                        Pattern.compile("transport = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("transport = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("transport = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("transport = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "XQ1 Station Names",
                         "XQ1_STATION",
-                        Pattern.compile("military_station_xq1 = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("military_station_xq1 = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("military_station_xq1 = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("military_station_xq1 = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "XQ2 Station Names",
                         "XQ2_STATION",
-                        Pattern.compile("military_station_xq2 = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("military_station_xq2 = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("military_station_xq2 = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("military_station_xq2 = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Golan 1 Station Names",
                         "GOLAN_1",
-                        Pattern.compile("military_station_golan1 = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("military_station_golan1 = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("military_station_golan1 = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("military_station_golan1 = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Golan 2 Station Names",
                         "GOLAN_2",
-                        Pattern.compile("military_station_golan2 = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("military_station_golan2 = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("military_station_golan2 = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("military_station_golan2 = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Golan 3 Station Names",
                         "GOLAN_3",
-                        Pattern.compile("military_station_golan3 = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("military_station_golan3 = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("military_station_golan3 = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("military_station_golan3 = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Battle Station Names",
                         "BATTLE_STATION",
-                        Pattern.compile("military_station_fleetop = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("military_station_fleetop = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("military_station_fleetop = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("military_station_fleetop = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Small military Station Names",
                         "XS_MIL_STATION",
-                        Pattern.compile("military_station_small = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("military_station_small = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("military_station_small = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("military_station_small = \\{\\s+").matcher(content),
                         false
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Ion Cannon Names",
                         "ION_CANNON",
-                        Pattern.compile("ion_cannon = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("ion_cannon = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("ion_cannon = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("ion_cannon = \\{\\s+").matcher(content),
                         false
                 )
         );
 
-        // TODO: here be ship classes
         // TODO: here be fleet names
+        CompositeLocEntryMap fleetNames = new CompositeLocEntryMap(
+                "Fleet Names",
+                empireName,
+                "",
+                "",
+                "fleet_names = \\{\\s+",
+                content
+        );
         // TODO: here be army names
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Male First Names",
                         "FIRST_MALE",
-                        Pattern.compile("\\sfirst_names_male = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("\\sfirst_names_male = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("\\sfirst_names_male = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("\\sfirst_names_male = \\{\\s+").matcher(content),
                         true
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Female First Names",
                         "FIRST_FEMALE",
-                        Pattern.compile("\\sfirst_names_female = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("\\sfirst_names_female = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("\\sfirst_names_female = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("\\sfirst_names_female = \\{\\s+").matcher(content),
                         true
                 )
         );
 
         categories.add(
-                new SimpleNameListCategory(
-                        empireName,
-                        speciesPrefix,
+                new RandomLocEntryMap(
                         "Last Names",
                         "SECOND",
-                        Pattern.compile("\\ssecond_names = \\{\\s+(.[^\\}]+)"),
-                        Pattern.compile("\\ssecond_names = \\{\\s+"),
+                        empireName,
+                        Pattern.compile("\\ssecond_names = \\{\\s+(.[^\\}]+)").matcher(content),
+                        Pattern.compile("\\ssecond_names = \\{\\s+").matcher(content),
                         true
                 )
         );
 
 
-        ArrayList<LocEntryMap> allCategories = new ArrayList<>();
-
-        for (NameListCategory category : categories) {
-            allCategories.add(LocEntryMap.generateCategoryEntries(category, content));
-        }
-
-
-        try {
-//            java.LocEntryMap fullNames = createFullNames(empireName, content);
-//            allCategories.add(fullNames);
-
-            LocEntryMap fleetNames = createFleetNames(speciesPrefix, empireName, content);
-            allCategories.add(fleetNames);
-
-            LocEntryMap armyNames = createArmyNames(speciesPrefix, empireName, content);
-            allCategories.add(armyNames);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        if ( ! allCategories.isEmpty()) {
+        if ( ! categories.isEmpty()) {
             output = output.concat("l_english:\n");
         }
 
-        for (LocEntryMap map : allCategories) {
+        for (AbstractLocEntryMap<?> map : categories) {
+            map.generateCategoryEntries();
             output = output.concat(
-                    StringTools.generateCategory(empireName, map.category, map)
+                    map.generateCategoryString()
             ).concat("\n\n");
         }
 
-        FileUtils.replaceKeys(allCategories, content, namesListFile);
+        //FileUtils.replaceKeys(categories, content, namesListFile);
 
         System.out.println(output);
 
@@ -340,7 +308,8 @@ public class Converter {
 //        return generateCategoryEntries(matcher, overheadMatcher, category, locPrefix, false);
 //    }
 
-    private static LocEntryMap createFleetNames(String empirePrefix, String empireName, String content) throws IOException {
+    // TODO: ComplexLocEntryMap
+    private static RandomLocEntryMap createFleetNames(String empirePrefix, String empireName, String content) throws IOException {
         final String category = "Fleet Names";
         final String locCategory = "_fleet_";
 
@@ -351,7 +320,12 @@ public class Converter {
             throw new IOException("Empty content");
         }
 
-        LocEntryMap categoryEntries = new LocEntryMap(category, null);
+        RandomLocEntryMap categoryEntries = new RandomLocEntryMap(
+                category,
+                locCategory,
+                empireName,
+                null,
+                null,false);
 
         // Cover all cases, only one can come true
         Pattern sequentialRandomPattern = Pattern.compile("fleet_names = \\{\\s+random_names = \\{\\s+(.*)\\s+\\}\\s+sequential_name = (.+)");
@@ -425,10 +399,10 @@ public class Converter {
     }
 
 
-    private static LocEntryMap createArmyNames(String empirePrefix, String empireName, String content) throws IOException {
+    private static RandomLocEntryMap createArmyNames(String empirePrefix, String empireName, String content) throws IOException {
         String locPrefix = " " + empirePrefix + "_ARMY_";
 
-        LocEntryMap map = new LocEntryMap("Armies");
+        RandomLocEntryMap map = new RandomLocEntryMap("Armies", "_ARMY_", empireName, null, null, false);
 
         // This will return the fleet_names, too, so we have to sieve a bit
         Pattern outerPattern = Pattern.compile("(?:(?:.+ = )\\{\\s+sequential_name = (?:.+))\\s+\\}|(?:.+\\s+random_names = \\{\\s+(?:.*)\\s+\\}\\s+sequential_name = (?:.+))\\s+\\}");
@@ -507,13 +481,13 @@ public class Converter {
      * @param nameListFiles all relevant name list files
      * @return All localisation entries in a Map
      */
-    public static LocEntryMap createShipClassNames(ArrayList<File> nameListFiles) {
+    public static RandomLocEntryMap createShipClassNames(ArrayList<File> nameListFiles) {
         Pattern empireShipClasses = Pattern.compile("ship_class_names = \\{(\\s+swp_.*= \\{\\s+.+})+");
         Pattern shipClassesEntry = Pattern.compile("swp_.[^=\\s]* = \\{\\s+.+\\}");
         Pattern shipClassesKeys = Pattern.compile("swp_.[^=\\s]*");
         Pattern shipClassesNames = Pattern.compile("\\{\\s+.+\\}");
 
-        LocEntryMap allShipClasses = new LocEntryMap("Ship Classes", null);
+        RandomLocEntryMap allShipClasses = new RandomLocEntryMap("Ship Classes", "SWFR_SHIP_CLASS_", null, null, null, false);
 
         Map<File, String> fileContents = new HashMap<>();
 

@@ -10,12 +10,15 @@ import java.util.Map;
 public class FileUtils {
 
     // TODO: does not work with army names, need maybe extra method
-    public static void replaceKeys(ArrayList<LocEntryMap> categories, String content, File original) {
+    // Does not work with complex structures, e.g. combo from sequential and random names
+    /*
+    public static void replaceKeys(ArrayList<AbstractLocEntryMap<?>> categories, String content, File original) {
         String newContent = content;
 
-        for (LocEntryMap map : categories) {
+        for (AbstractLocEntryMap<?> map : categories) {
             if (map.isEmpty()) continue;
 
+            // TODO: Das in die jeweilige Klasse mit gemeinsamer Methode verfrachten
             String toReplace = map.getPrimaryRaw();
 
             if (toReplace == null || toReplace.isEmpty()) {
@@ -60,6 +63,8 @@ public class FileUtils {
     }
 
 
+     */
+
     public static void writeToNamelistFile (File nameListFile, String content) {
         try (FileOutputStream fos = new FileOutputStream(nameListFile)){
             fos.write(content.getBytes(StandardCharsets.UTF_8));
@@ -85,8 +90,8 @@ public class FileUtils {
 
     }
 
-    public static void writeToBOMFile(File file, LocEntryMap entries)  {
-        String content = "l_english:\n" + StringTools.generateCategory("", "Ship Classes", entries);
+    public static void writeToBOMFile(File file, RandomLocEntryMap entries)  {
+        String content = "l_english:\n" + entries.generateCategoryString();
 
         writeToBOMFile(file, content);
     }

@@ -1,10 +1,11 @@
 package javasrc;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 
 import static javasrc.StringTools.extractNames;
@@ -14,9 +15,8 @@ import static javasrc.StringTools.extractNames;
  * key: localisation key, e.g. IMP_SHIP_monitor
  * value: localisation value, e.g. "Monitor" (note, <b>without</b> the parentheses!)
  */
-public class LocEntryMap extends TreeMap<String, String> {
-    final String category;
-
+public class RandomLocEntryMap extends AbstractLocEntryMap<String> {
+    private String primaryRaw;
     public String getPrimaryRaw() {
         return primaryRaw;
     }
@@ -24,9 +24,8 @@ public class LocEntryMap extends TreeMap<String, String> {
         this.primaryRaw = primaryRaw;
     }
 
-    private String primaryRaw;
 
-
+    private String secondaryRaw;
     public String getSecondaryRaw() {
         return secondaryRaw;
     }
@@ -34,27 +33,46 @@ public class LocEntryMap extends TreeMap<String, String> {
         this.secondaryRaw = secondaryRaw;
     }
 
-    private String secondaryRaw;
 
-    public LocEntryMap (String category) {
-        this.category = category;
+
+    private final Matcher rawMatcher;
+    private final Matcher overheadMatcher;
+
+
+    private final boolean multipleEntriesPossible;
+    public boolean isMultipleEntriesPossible() {
+        return multipleEntriesPossible;
     }
 
-    public LocEntryMap (String category, String primaryRaw) {
-        this.category = category;
+    public RandomLocEntryMap(String category, String categoryLoc, @Nullable String empireName, Matcher rawMatcher, Matcher overheadMatcher, boolean multipleEntriesPossible) {
+        super(category, empireName, categoryLoc);
+        this.rawMatcher = rawMatcher;
+        this.overheadMatcher = overheadMatcher;
+        this.multipleEntriesPossible = multipleEntriesPossible;
+    }
+
+    public RandomLocEntryMap(@NotNull String category, String categoryLoc, String empireName, Matcher rawMatcher, Matcher overheadMatcher, String primaryRaw, boolean multipleEntriesPossible) {
+        super(category, empireName, categoryLoc);
+        this.rawMatcher = rawMatcher;
+        this.overheadMatcher = overheadMatcher;
+        this.multipleEntriesPossible = multipleEntriesPossible;
+
         this.primaryRaw = primaryRaw;
     }
+
 
     /**
      * Builds the string used in the actual localisation file
      * @param entry the singular entry of the map, e.g. a collection of all ship names entries
      * @return localisation file line
      */
-    private String getLocString(Map.Entry<String, String> entry) {
+    @Override
+    public String getLocString(Map.Entry<String, String> entry) {
         return " " + entry.getKey()+ ": \"" + entry.getValue() + "\"";
     }
 
-    public String generateCategoryBody() {
+    @Override
+    public String generateBodyString() {
         String body = "";
 
         for (Map.Entry<String, String> entry : this.entrySet()){
@@ -64,39 +82,22 @@ public class LocEntryMap extends TreeMap<String, String> {
         return body;
     }
 
-    public static LocEntryMap generateCategoryEntries(NameListCategory category, String content) {
-        if (category instanceof SimpleNameListCategory) {
-            return generateCategoryEntries(
-                    ((SimpleNameListCategory) category).getRawPattern().matcher(content),
-                    ((SimpleNameListCategory) category).getOverhead().matcher(content),
-                    category.categoryName,
-                    category.buildLocPrefix(),
-                    ((SimpleNameListCategory) category).isMultipleEntriesPossible());
-        } else return null;
-    }
-
     /**
-     *
-     * @param matcher Finds all relevant groups from provided content
-     * @param overheadMatcher To remove eventual overhead (e.g. block keys) from content
-     * @param category Category that is worked on (e.g. generic ship names)
-     * @param locPrefix prefix of the localisations key
-     * @return Map with all localisation entries
+     * Factory method to generate the map
      */
-    private static LocEntryMap generateCategoryEntries(Matcher matcher, Matcher overheadMatcher, String category, String locPrefix, boolean allGroups){
-        LocEntryMap categoryEntryMap =  new LocEntryMap(category);
-
+    @Override
+    public void generateCategoryEntries(){
         // If multiple groups fall into the same category, e.g. first names, bundle them
-        if (allGroups) {
-            while (matcher.find()) {
-                String list = matcher.group();
+        if (multipleEntriesPossible) {
+            while (rawMatcher.find()) {
+                String list = rawMatcher.group();
 
                 if (overheadMatcher.find()) {
                     String overhead = overheadMatcher.group();
                     list = list.replace(overhead, "");
                 }
 
-                categoryEntryMap.setPrimaryRaw(list);
+                this.setPrimaryRaw(list);
 
                 ArrayList<String> namesList = extractNames(list);
 
@@ -110,19 +111,19 @@ public class LocEntryMap extends TreeMap<String, String> {
                     );
                     String value = name.replace("\"", "");
 
-                    categoryEntryMap.put(locPrefix.concat(key.toLowerCase()), value);
+                    this.put(locPrefix.concat(key.toLowerCase()), value);
                 }
             }
         } else {
-            if (matcher.find()) {
-                String list = matcher.group();
+            if (rawMatcher.find()) {
+                String list = rawMatcher.group();
 
                 if (overheadMatcher.find()) {
                     String overhead = overheadMatcher.group();
                     list = list.replace(overhead, "");
                 }
 
-                categoryEntryMap.setPrimaryRaw(list);
+                this.setPrimaryRaw(list);
 
                 ArrayList<String> namesList = extractNames(list);
 
@@ -136,10 +137,9 @@ public class LocEntryMap extends TreeMap<String, String> {
                     );
                     String value = name.replace("\"", "");
 
-                    categoryEntryMap.put(locPrefix.concat(key.toLowerCase()), value);
+                    this.put(locPrefix.concat(key.toLowerCase()), value);
                 }
             }
         }
-        return categoryEntryMap;
     }
 }
